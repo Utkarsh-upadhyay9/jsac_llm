@@ -95,18 +95,8 @@ for omega_val in omega_values:
 
 plt.xlabel('Number of Sensing Targets', fontsize=12)
 plt.ylabel('Final Reward', fontsize=12)
-plt.title('Reward vs Number of Sensing Targets for w=0 (Sensing) and w=1 (Communication)', fontsize=14)
 plt.legend(fontsize=10)
 plt.grid(True, alpha=0.3)
-
-# Add annotations
-plt.annotate('Sensing improves\nwith more targets', 
-            xy=(3, plt.gca().get_ylim()[1] - 0.3), 
-            fontsize=10, ha='center', style='italic', alpha=0.7)
-
-plt.annotate('Communication unaffected\nby sensing targets', 
-            xy=(4, plt.gca().get_ylim()[0] + 0.4), 
-            fontsize=10, ha='center', style='italic', alpha=0.7)
 
 plt.tight_layout()
 plt.savefig('plots/figure_3_reward_vs_targets_fast.png', dpi=300, bbox_inches='tight')

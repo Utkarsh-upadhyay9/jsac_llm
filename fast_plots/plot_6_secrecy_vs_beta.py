@@ -85,15 +85,8 @@ for algo_name, color in zip(['MLP', 'LLM', 'Hybrid'], colors):
 
 plt.xlabel('Beta Factor', fontsize=12)
 plt.ylabel('Secrecy Rate (bits/s/Hz)', fontsize=12)
-plt.title('Secrecy Rate vs Beta Factor', fontsize=14)
 plt.legend(fontsize=12)
 plt.grid(True, alpha=0.3)
-
-# Add annotation
-plt.annotate('Optimal beta around\n0.6-0.8 for secrecy', 
-            xy=(0.7, plt.gca().get_ylim()[1] * 0.8), 
-            fontsize=10, ha='center', style='italic', alpha=0.7,
-            bbox=dict(boxstyle="round,pad=0.3", facecolor="lightgreen", alpha=0.7))
 
 plt.tight_layout()
 plt.savefig('plots/figure_6_secrecy_vs_beta_fast.png', dpi=300, bbox_inches='tight')

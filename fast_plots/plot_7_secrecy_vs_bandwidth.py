@@ -82,15 +82,8 @@ for algo_name, color in zip(['MLP', 'LLM', 'Hybrid'], colors):
 
 plt.xlabel('Bandwidth (GHz)', fontsize=12)
 plt.ylabel('Secrecy Rate (bits/s/Hz)', fontsize=12)
-plt.title('Secrecy Rate vs Bandwidth', fontsize=14)
 plt.legend(fontsize=12)
 plt.grid(True, alpha=0.3)
-
-# Add annotation
-plt.annotate('Linear improvement\nwith bandwidth\n(Shannon limit)', 
-            xy=(1.8, plt.gca().get_ylim()[1] * 0.7), 
-            fontsize=10, ha='center', style='italic', alpha=0.7,
-            bbox=dict(boxstyle="round,pad=0.3", facecolor="lightyellow", alpha=0.7))
 
 plt.tight_layout()
 plt.savefig('plots/figure_7_secrecy_vs_bandwidth_fast.png', dpi=300, bbox_inches='tight')

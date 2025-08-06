@@ -14,7 +14,7 @@ print("=== JSAC Figure 1: Convergence vs Episodes (Fast) ===")
 if not os.path.exists('plots'):
     os.makedirs('plots')
 
-def moving_avg(x, window=30):
+def moving_avg(x, window=2000):
     if len(x) < window:
         return x
     return np.convolve(x, np.ones(window)/window, mode='valid')
@@ -76,13 +76,12 @@ for i, (N_ris, M_bs) in enumerate(antenna_configs):
     if config_name in results_fig1:
         for j, (algo_name, color) in enumerate(zip(['MLP', 'LLM', 'Hybrid'], colors)):
             rewards = results_fig1[config_name][algo_name]['history']
-            smoothed = moving_avg(rewards, 50)
+            smoothed = moving_avg(rewards, 2000)
             plt.plot(smoothed, color=color, linestyle=linestyles[i], 
                     label=f'{algo_name} (N={N_ris}, M={M_bs})', alpha=0.8, linewidth=2)
 
 plt.xlabel('Episodes')
 plt.ylabel('Reward')
-plt.title('Convergence vs Episodes (Different Antenna Configurations)')
 plt.legend()
 plt.grid(True, alpha=0.3)
 
@@ -93,13 +92,12 @@ for i, P_max_val in enumerate(power_configs):
     if config_name in results_fig1:
         for j, (algo_name, color) in enumerate(zip(['MLP', 'LLM', 'Hybrid'], colors)):
             rewards = results_fig1[config_name][algo_name]['history']
-            smoothed = moving_avg(rewards, 50)
+            smoothed = moving_avg(rewards, 2000)
             plt.plot(smoothed, color=color, linestyle=linestyles[i], 
                     label=f'{algo_name} (P={P_max_val}W)', alpha=0.8, linewidth=2)
 
 plt.xlabel('Episodes')
 plt.ylabel('Reward')
-plt.title('Convergence vs Episodes (Different Power Levels)')
 plt.legend()
 plt.grid(True, alpha=0.3)
 
@@ -111,14 +109,13 @@ for N_ris, M_bs in antenna_configs:
         config_name = f"N{N_ris}_M{M_bs}_P{P_max_val}"
         if config_name in results_fig1:
             rewards = results_fig1[config_name]['Hybrid']['history']
-            smoothed = moving_avg(rewards, 50)
+            smoothed = moving_avg(rewards, 2000)
             plt.plot(smoothed, label=f'N={N_ris}, M={M_bs}, P={P_max_val}W', 
                     alpha=0.8, linewidth=2)
             config_idx += 1
 
 plt.xlabel('Episodes')
 plt.ylabel('Reward')
-plt.title('Hybrid Algorithm - All Configurations')
 plt.legend(bbox_to_anchor=(1.05, 1), loc='upper left')
 plt.grid(True, alpha=0.3)
 
@@ -142,7 +139,6 @@ for i, (algo_name, color) in enumerate(zip(['MLP', 'LLM', 'Hybrid'], colors)):
 
 plt.xlabel('Configuration')
 plt.ylabel('Final Average Reward')
-plt.title('Final Convergence Performance')
 plt.xticks(x_pos + width, config_labels, rotation=45, fontsize=8)
 plt.legend()
 plt.grid(True, alpha=0.3)

@@ -86,15 +86,8 @@ for algo_name, color in zip(['MLP', 'LLM', 'Hybrid'], colors):
 
 plt.xlabel('Total Power (dBm)', fontsize=12)
 plt.ylabel('Secrecy Rate (bits/s/Hz)', fontsize=12)
-plt.title('Secrecy Rate vs Total Power', fontsize=14)
 plt.legend(fontsize=12)
 plt.grid(True, alpha=0.3)
-
-# Add annotation
-plt.annotate('Higher power improves\nsecrecy with diminishing\nreturns', 
-            xy=(22, plt.gca().get_ylim()[1] * 0.6), 
-            fontsize=10, ha='center', style='italic', alpha=0.7,
-            bbox=dict(boxstyle="round,pad=0.3", facecolor="lightblue", alpha=0.7))
 
 plt.tight_layout()
 plt.savefig('plots/figure_5_secrecy_vs_power_fast.png', dpi=300, bbox_inches='tight')
