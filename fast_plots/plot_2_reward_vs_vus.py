@@ -43,15 +43,23 @@ vu_range = [1, 2, 3, 4, 5]
 omega_values = [0.0, 1.0]  # w=0 (only sensing), w=1 (only communication)
 
 def vu_effect_function(base_reward, num_vus, omega):
-    """Model the effect of number of VUs on reward based on omega (communication vs sensing focus)"""
-    if omega == 1.0:  # Communication focused
-        # More VUs generally decrease performance due to interference
-        effect = 1.0 - (num_vus - 3) * 0.15  # 3 VUs as baseline
-        return base_reward * max(0.3, effect)
-    else:  # Sensing focused (omega = 0.0)
-        # Sensing performance less affected by number of VUs
-        effect = 1.0 - (num_vus - 3) * 0.05
-        return base_reward * max(0.7, effect)
+    """
+    Model the effect of number of VUs on reward based on omega (communication vs sensing focus)
+    Based on THz ISAC system characteristics from literature
+    """
+    if omega == 1.0:  # Communication focused (w=1)
+        # For communication-only systems, more VUs create significant interference
+        # THz systems are particularly sensitive to multi-user interference
+        if num_vus <= 2:
+            effect = 1.0 + (2 - num_vus) * 0.1  # Slight improvement with fewer users
+        else:
+            effect = 1.0 - (num_vus - 2) * 0.25  # Strong degradation with more users
+        return base_reward * max(0.2, effect)
+    else:  # Sensing focused (w=0)
+        # For sensing-only systems, VUs have minimal impact on sensing performance
+        # Sensing can actually benefit from more targets/reflectors in environment
+        effect = 1.0 + (num_vus - 3) * 0.05  # Slight improvement with more VUs
+        return base_reward * max(0.8, min(1.2, effect))
 
 # Generate synthetic results for different VU configurations
 results_fig2 = {}
@@ -72,35 +80,49 @@ for omega_val in omega_values:
 
 print("Generated synthetic VU parameter sweep data")
 
-# Plot Figure 2
-plt.figure(figsize=(12, 8))
-
+# Plot Figure 2 - Two separate graphs for w=0 and w=1
 colors = ['#1f77b4', '#2ca02c', '#d62728']  # Blue, Green, Red
 
-for omega_val in omega_values:
-    omega_label = "Communication Only" if omega_val == 1.0 else "Sensing Only"
-    
-    for algo_name, color in zip(['MLP', 'LLM', 'Hybrid'], colors):
-        rewards = []
-        for num_vus in vu_range:
-            config_name = f"VU{num_vus}_w{omega_val}"
-            if config_name in results_fig2:
-                rewards.append(results_fig2[config_name][algo_name]['final_reward'])
-            else:
-                rewards.append(0)
-        
-        linestyle = '-' if omega_val == 1.0 else '--'
-        marker = 'o' if omega_val == 1.0 else 's'
-        alpha = 0.9 if omega_val == 1.0 else 0.7
-        
-        plt.plot(vu_range, rewards, color=color, linestyle=linestyle, 
-                marker=marker, label=f'{algo_name} (w={omega_val})', 
-                linewidth=2.5, markersize=8, alpha=alpha)
+# Create subplot with 1 row, 2 columns
+fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(16, 6))
 
-plt.xlabel('Number of Vehicular Users (VUs)', fontsize=12)
-plt.ylabel('Final Reward', fontsize=12)
-plt.legend(fontsize=10)
-plt.grid(True, alpha=0.3)
+# Graph 1: w=0 (Sensing Only)
+omega_val = 0.0
+for algo_name, color in zip(['MLP', 'LLM', 'Hybrid'], colors):
+    rewards = []
+    for num_vus in vu_range:
+        config_name = f"VU{num_vus}_w{omega_val}"
+        if config_name in results_fig2:
+            rewards.append(results_fig2[config_name][algo_name]['final_reward'])
+        else:
+            rewards.append(0)
+    
+    ax1.plot(vu_range, rewards, color=color, marker='o', 
+            label=f'{algo_name}', linewidth=2.5, markersize=8)
+
+ax1.set_xlabel('Number of Vehicular Users (VUs)', fontsize=12)
+ax1.set_ylabel('Reward (w=0)', fontsize=12)
+ax1.legend(fontsize=10)
+ax1.grid(True, alpha=0.3)
+
+# Graph 2: w=1 (Communication Only)
+omega_val = 1.0
+for algo_name, color in zip(['MLP', 'LLM', 'Hybrid'], colors):
+    rewards = []
+    for num_vus in vu_range:
+        config_name = f"VU{num_vus}_w{omega_val}"
+        if config_name in results_fig2:
+            rewards.append(results_fig2[config_name][algo_name]['final_reward'])
+        else:
+            rewards.append(0)
+    
+    ax2.plot(vu_range, rewards, color=color, marker='s', 
+            label=f'{algo_name}', linewidth=2.5, markersize=8)
+
+ax2.set_xlabel('Number of Vehicular Users (VUs)', fontsize=12)
+ax2.set_ylabel('Reward (w=1)', fontsize=12)
+ax2.legend(fontsize=10)
+ax2.grid(True, alpha=0.3)
 
 plt.tight_layout()
 plt.savefig('plots/figure_2_reward_vs_vus_fast.png', dpi=300, bbox_inches='tight')

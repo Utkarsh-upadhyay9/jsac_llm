@@ -68,35 +68,49 @@ for omega_val in omega_values:
 
 print("Generated synthetic sensing target parameter sweep data")
 
-# Plot Figure 3
-plt.figure(figsize=(12, 8))
-
+# Plot Figure 3 - Two separate graphs for w=0 and w=1
 colors = ['#1f77b4', '#2ca02c', '#d62728']  # Blue, Green, Red
 
-for omega_val in omega_values:
-    omega_label = "Communication Only" if omega_val == 1.0 else "Sensing Only"
-    
-    for algo_name, color in zip(['MLP', 'LLM', 'Hybrid'], colors):
-        rewards = []
-        for num_targets in target_range:
-            config_name = f"Targets{num_targets}_w{omega_val}"
-            if config_name in results_fig3:
-                rewards.append(results_fig3[config_name][algo_name]['final_reward'])
-            else:
-                rewards.append(0)
-        
-        linestyle = '-' if omega_val == 1.0 else '--'
-        marker = 'o' if omega_val == 1.0 else 's'
-        alpha = 0.9 if omega_val == 1.0 else 0.7
-        
-        plt.plot(target_range, rewards, color=color, linestyle=linestyle, 
-                marker=marker, label=f'{algo_name} (w={omega_val})', 
-                linewidth=2.5, markersize=8, alpha=alpha)
+# Create subplot with 1 row, 2 columns
+fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(16, 6))
 
-plt.xlabel('Number of Sensing Targets', fontsize=12)
-plt.ylabel('Final Reward', fontsize=12)
-plt.legend(fontsize=10)
-plt.grid(True, alpha=0.3)
+# Graph 1: w=0 (Sensing Only)
+omega_val = 0.0
+for algo_name, color in zip(['MLP', 'LLM', 'Hybrid'], colors):
+    rewards = []
+    for num_targets in target_range:
+        config_name = f"Targets{num_targets}_w{omega_val}"
+        if config_name in results_fig3:
+            rewards.append(results_fig3[config_name][algo_name]['final_reward'])
+        else:
+            rewards.append(0)
+    
+    ax1.plot(target_range, rewards, color=color, marker='o', 
+            label=f'{algo_name}', linewidth=2.5, markersize=8)
+
+ax1.set_xlabel('Number of Sensing Targets', fontsize=12)
+ax1.set_ylabel('Reward (w=0)', fontsize=12)
+ax1.legend(fontsize=10)
+ax1.grid(True, alpha=0.3)
+
+# Graph 2: w=1 (Communication Only)
+omega_val = 1.0
+for algo_name, color in zip(['MLP', 'LLM', 'Hybrid'], colors):
+    rewards = []
+    for num_targets in target_range:
+        config_name = f"Targets{num_targets}_w{omega_val}"
+        if config_name in results_fig3:
+            rewards.append(results_fig3[config_name][algo_name]['final_reward'])
+        else:
+            rewards.append(0)
+    
+    ax2.plot(target_range, rewards, color=color, marker='s', 
+            label=f'{algo_name}', linewidth=2.5, markersize=8)
+
+ax2.set_xlabel('Number of Sensing Targets', fontsize=12)
+ax2.set_ylabel('Reward (w=1)', fontsize=12)
+ax2.legend(fontsize=10)
+ax2.grid(True, alpha=0.3)
 
 plt.tight_layout()
 plt.savefig('plots/figure_3_reward_vs_targets_fast.png', dpi=300, bbox_inches='tight')
