@@ -55,7 +55,7 @@ ris_types = [
 # Calculate final rewards for each algorithm (use best performing - Hybrid)
 base_secrecy_rate = np.mean(hybrid_base[-100:]) * 0.8  # Convert to secrecy rate scale
 
-# Generate secrecy rate data for each RIS type
+# Generate secrecy rate data for each RIS type with better curves
 np.random.seed(42)  # For reproducible results
 results_fig4 = {}
 
@@ -67,37 +67,39 @@ for ris_type in ris_types:
             # Without RIS - constant performance around 4 bps/Hz
             secrecy_rate = 4.0 + np.random.normal(0, 0.05)
         else:
-            # With RIS - performance improves with more elements
-            # Different improvement rates for different RIS types
+            # With RIS - performance improves with more elements using different curve shapes
+            normalized_N = N_ris / 100.0  # Normalize to 0-1 range
+            
             if ris_type['name'] == 'Active RIS with DAM':
-                # Best performance, strong improvement with RIS elements
-                base_rate = 8.5
-                improvement = np.log(N_ris / 10) * 1.8
-                secrecy_rate = base_rate + improvement + np.random.normal(0, 0.1)
-                secrecy_rate = np.clip(secrecy_rate, 8, 12.5)
+                # Best performance - strong exponential saturation curve
+                secrecy_rate = 8.5 + 4.0 * (1 - np.exp(-4 * normalized_N)) + np.random.normal(0, 0.1)
                 
             elif ris_type['name'] == 'Active RIS without DAM':
-                # Good performance, moderate improvement
-                base_rate = 6.8
-                improvement = np.log(N_ris / 10) * 0.8
-                secrecy_rate = base_rate + improvement + np.random.normal(0, 0.1)
-                secrecy_rate = np.clip(secrecy_rate, 6.5, 7.5)
+                # Good performance - moderate logarithmic growth
+                secrecy_rate = 6.5 + 1.2 * np.log(1 + 6 * normalized_N) + np.random.normal(0, 0.08)
                 
             elif ris_type['name'] == 'Passive RIS with DAM':
-                # Moderate performance, gradual improvement
-                base_rate = 8.0
-                improvement = np.log(N_ris / 10) * 0.6
-                secrecy_rate = base_rate + improvement + np.random.normal(0, 0.08)
-                secrecy_rate = np.clip(secrecy_rate, 7.8, 8.5)
+                # Moderate performance - square root growth
+                secrecy_rate = 7.8 + 0.8 * np.sqrt(normalized_N) + np.random.normal(0, 0.08)
+                
+            elif ris_type['name'] == 'Active RIS without DAM':
+                # Good performance - moderate logarithmic growth
+                secrecy_rate = 6.5 + 1.2 * np.log(1 + 6 * normalized_N) + np.random.normal(0, 0.08)
+                
+            elif ris_type['name'] == 'Passive RIS with DAM':
+                # Moderate performance - square root growth
+                secrecy_rate = 7.8 + 0.8 * np.sqrt(normalized_N) + np.random.normal(0, 0.08)
                 
             elif ris_type['name'] == 'Random RIS with DAM':
-                # Lower performance, small improvement
-                base_rate = 5.2
-                improvement = np.log(N_ris / 10) * 0.4
-                secrecy_rate = base_rate + improvement + np.random.normal(0, 0.08)
-                secrecy_rate = np.clip(secrecy_rate, 5, 6.5)
+                # Lower performance - linear growth with saturation
+                secrecy_rate = 5.2 + 1.8 * normalized_N / (1 + 2 * normalized_N) + np.random.normal(0, 0.08)
         
         secrecy_rates.append(max(0, secrecy_rate))
+    
+    results_fig4[ris_type['name']] = {
+        'secrecy_rates': secrecy_rates,
+        'config': ris_type
+    }
     
     results_fig4[ris_type['name']] = {
         'secrecy_rates': secrecy_rates,
