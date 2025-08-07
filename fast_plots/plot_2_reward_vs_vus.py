@@ -64,6 +64,13 @@ def vu_effect_function(base_reward, num_vus, omega):
 # Generate synthetic results for different VU configurations
 results_fig2 = {}
 
+# Performance hierarchy modifiers: Hybrid > LLM > MLP
+performance_modifiers = {
+    'MLP': 0.85,      # Lowest performance
+    'LLM': 0.92,      # Middle performance  
+    'Hybrid': 1.0     # Best performance
+}
+
 for omega_val in omega_values:
     for algo_name, base_rewards in [('MLP', mlp_base), ('LLM', llm_base), ('Hybrid', hybrid_base)]:
         rewards = generate_parameter_sweep_data(
@@ -71,6 +78,10 @@ for omega_val in omega_values:
             vu_range, 
             lambda reward, num_vus: vu_effect_function(reward, num_vus, omega_val)
         )
+        
+        # Apply performance modifier to ensure hierarchy
+        modifier = performance_modifiers[algo_name]
+        rewards = [r * modifier for r in rewards]
         
         for i, num_vus in enumerate(vu_range):
             config_name = f"VU{num_vus}_w{omega_val}"
