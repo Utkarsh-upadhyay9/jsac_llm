@@ -40,7 +40,7 @@ except FileNotFoundError as e:
 
 # Parameter sweep configuration
 vu_range = [1, 2, 3, 4, 5]
-omega_values = [0.0, 1.0]  # w=0 (only sensing), w=1 (only communication)
+omega_values = [0.0, 1.0]  # ω=0 (only sensing), ω=1 (only communication)
 
 def vu_effect_function(base_reward, num_vus, omega):
     """
@@ -86,7 +86,7 @@ colors = ['#1f77b4', '#2ca02c', '#d62728']  # Blue, Green, Red
 # Create subplot with 1 row, 2 columns
 fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(16, 6))
 
-# Graph 1: w=0 (Sensing Only)
+# Graph 1: ω=0 (Sensing Only)
 omega_val = 0.0
 for algo_name, color in zip(['MLP', 'LLM', 'Hybrid'], colors):
     rewards = []
@@ -100,12 +100,12 @@ for algo_name, color in zip(['MLP', 'LLM', 'Hybrid'], colors):
     ax1.plot(vu_range, rewards, color=color, marker='o', 
             label=f'{algo_name}', linewidth=2.5, markersize=8)
 
-ax1.set_xlabel('Number of Vehicular Users (VUs)', fontsize=12)
-ax1.set_ylabel('Reward (w=0)', fontsize=12)
+ax1.set_xlabel('Number of VUs', fontsize=12)
+ax1.set_ylabel('Reward (ω=0)', fontsize=12)
 ax1.legend(fontsize=10)
 ax1.grid(True, alpha=0.3)
 
-# Graph 2: w=1 (Communication Only)
+# Graph 2: ω=1 (Communication Only)
 omega_val = 1.0
 for algo_name, color in zip(['MLP', 'LLM', 'Hybrid'], colors):
     rewards = []
@@ -119,8 +119,8 @@ for algo_name, color in zip(['MLP', 'LLM', 'Hybrid'], colors):
     ax2.plot(vu_range, rewards, color=color, marker='s', 
             label=f'{algo_name}', linewidth=2.5, markersize=8)
 
-ax2.set_xlabel('Number of Vehicular Users (VUs)', fontsize=12)
-ax2.set_ylabel('Reward (w=1)', fontsize=12)
+ax2.set_xlabel('Number of VUs', fontsize=12)
+ax2.set_ylabel('Reward (ω=1)', fontsize=12)
 ax2.legend(fontsize=10)
 ax2.grid(True, alpha=0.3)
 
