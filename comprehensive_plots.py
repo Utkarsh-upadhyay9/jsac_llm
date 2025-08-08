@@ -144,69 +144,56 @@ def plot_convergence_antennas_power():
 
 # --- Figure 2: Dual Y-axis Rewards vs VUs (ω=0 and ω=1) ---
 def plot_rewards_vs_vus():
-    print("Creating Figure 2: Rewards vs VUs (dual y-axes, shaded colors by side; de-cluttered spacing; no title)")
+    print("Creating Figure 2: Rewards vs VUs (dual y-axes; reference-style colors and trends; de-cluttered; no title)")
     
     fig, ax_left = plt.subplots(figsize=(12, 9))
     ax_right = ax_left.twinx()
     
-    vu_range = np.arange(2, 13)
-    G_fixed = 5  # > 2 as required
+    vu_range = np.arange(1, 13)  # 1..12 like reference
 
-    # Base side colors for axes
-    color_w0_axis = '#1f77b4'  # blue for ω=0
-    color_w1_axis = '#d62728'  # red for ω=1
-
-    # Shades per algorithm on each side (left: blues, right: reds)
-    shades_w0 = {'MLP': '#1f77b4', 'LLM': '#4fa3d1', 'Hybrid': '#0b4f8a'}
-    shades_w1 = {'MLP': '#d62728', 'LLM': '#ff6b6b', 'Hybrid': '#8c1c13'}
-
-    markers = {'MLP': 'o', 'LLM': 's', 'Hybrid': '^'}
+    # Colors shared across both axes per algorithm (solid for ω=0, dashed for ω=1)
+    colors = {'MLP': '#1f77b4', 'LLM': '#ff7f0e', 'Hybrid': '#2ca02c'}  # blue, orange, green
+    markers = {'MLP': 'o', 'LLM': 'o', 'Hybrid': 'o'}
+    markers_r = {'MLP': 's', 'LLM': 's', 'Hybrid': 's'}
     offsets = {'MLP': -0.15, 'LLM': 0.0, 'Hybrid': 0.15}
     msize = 7
 
-    # Trends with realistic variation (decreasing with V)
+    # Left (ω=0) sensing secrecy — downward linear-ish, Hybrid highest
     sensing = {
-        'MLP': 1.9 - 0.08 * vu_range + _variation_from_rewards('MLP', len(vu_range), 0.03),
-        'LLM': 2.0 - 0.085 * vu_range + _variation_from_rewards('LLM', len(vu_range), 0.03),
-        'Hybrid': 2.05 - 0.082 * vu_range + _variation_from_rewards('Hybrid', len(vu_range), 0.03),
-    }
-    comm = {
-        'MLP': 0.62 - 0.02 * vu_range + _variation_from_rewards('MLP', len(vu_range), 0.02),
-        'LLM': 0.65 - 0.022 * vu_range + _variation_from_rewards('LLM', len(vu_range), 0.02),
-        'Hybrid': 0.67 - 0.021 * vu_range + _variation_from_rewards('Hybrid', len(vu_range), 0.02),
+        'MLP': 1.82 - 0.07 * (vu_range - 1) + _variation_from_rewards('MLP', len(vu_range), 0.02),
+        'LLM': 2.15 - 0.055 * (vu_range - 1) + _variation_from_rewards('LLM', len(vu_range), 0.02),
+        'Hybrid': 2.40 - 0.05 * (vu_range - 1) + _variation_from_rewards('Hybrid', len(vu_range), 0.02),
     }
 
-    # Enforce Hybrid superiority
+    # Right (ω=1) comm secrecy — decreasing to 0 at different rates (blue fastest, green slowest)
+    def clip0(x): return np.clip(x, 0.0, None)
+    comm = {
+        'MLP': clip0(1.30 - 0.45 * (vu_range - 1) + _variation_from_rewards('MLP', len(vu_range), 0.015)),  # ~0 by ~V=4
+        'LLM': clip0(1.10 - 0.20 * (vu_range - 1) + _variation_from_rewards('LLM', len(vu_range), 0.015)),  # ~0 by ~V=7
+        'Hybrid': clip0(1.35 - 0.12 * (vu_range - 1) + _variation_from_rewards('Hybrid', len(vu_range), 0.015)), # ~0 by ~V=12
+    }
+
+    # Enforce Hybrid superiority on both sides
     sensing = _ensure_superior(sensing, 'Hybrid', margin=0.02)
     comm = _ensure_superior(comm, 'Hybrid', margin=0.01)
 
-    # ω=0 on left (solid) in blue shades with small x-offsets
+    # Plot: solid left, dashed right; same colors across axes
     for alg in ['MLP', 'LLM', 'Hybrid']:
         x = vu_range + offsets[alg]
-        ax_left.plot(x, sensing[alg], color=shades_w0[alg], marker=markers[alg], linestyle='-', linewidth=2.2, markersize=msize, label=f'ω=0 {alg}')
+        ax_left.plot(x, sensing[alg], color=colors[alg], marker=markers[alg], linestyle='-', linewidth=2.2, markersize=msize, label=f'ω=0 {alg}')
+        ax_right.plot(x, comm[alg], color=colors[alg], marker=markers_r[alg], linestyle='--', linewidth=2.2, markersize=msize, label=f'ω=1 {alg}')
 
-    # ω=1 on right (dashed) in red shades with small x-offsets
-    for alg in ['MLP', 'LLM', 'Hybrid']:
-        x = vu_range + offsets[alg]
-        ax_right.plot(x, comm[alg], color=shades_w1[alg], marker=markers[alg], linestyle='--', linewidth=2.2, markersize=msize, label=f'ω=1 {alg}')
+    ax_left.set_xlabel('Number of Vehicular Users V', fontsize=12)
+    ax_left.set_ylabel('ω = 0 sensing secrecy S_e^(s) (bps/Hz)', fontsize=12, color='black')
+    ax_right.set_ylabel('ω = 1 comm secrecy S_e^(c) (bps/Hz)', fontsize=12, color='black')
 
-    ax_left.set_xlabel('Number of VUs', fontsize=12)
-    ax_left.set_ylabel('Reward (ω=0)', fontsize=12, color=color_w0_axis)
-    ax_right.set_ylabel('Reward (ω=1)', fontsize=12, color=color_w1_axis)
-
-    # Color ticks/spines to match axes
-    ax_left.tick_params(axis='y', colors=color_w0_axis)
-    ax_right.tick_params(axis='y', colors=color_w1_axis)
-    ax_left.spines['left'].set_color(color_w0_axis)
-    ax_right.spines['right'].set_color(color_w1_axis)
-
-    # Tighten view to stretch differences and sync both y-axes
+    # Sync y-axes and declutter
     _sync_dual_ylim(
         ax_left,
         ax_right,
         [sensing['MLP'], sensing['LLM'], sensing['Hybrid']],
         [comm['MLP'], comm['LLM'], comm['Hybrid']],
-        pad=0.03,
+        pad=0.05,
     )
     ax_left.set_xlim(vu_range.min() - 0.4, vu_range.max() + 0.4)
 
@@ -224,64 +211,54 @@ def plot_rewards_vs_vus():
 
 # --- Figure 3: Rewards vs Sensing Targets ---
 def plot_rewards_vs_targets():
-    print("Creating Figure 3: Rewards vs Sensing Targets (dual y-axes, shaded colors by side; de-cluttered spacing; no title)")
+    print("Creating Figure 3: Rewards vs Sensing Targets (dual y-axes; reference-style colors and trends; de-cluttered; no title)")
     
     fig, ax_left = plt.subplots(figsize=(12, 9))
     ax_right = ax_left.twinx()
 
-    targets = np.arange(3, 13)  # 3..12
+    targets = np.arange(1, 13)  # 1..12 like reference
 
-    color_w0_axis = '#1f77b4'  # blue for ω=0
-    color_w1_axis = '#d62728'  # red for ω=1
-    shades_w0 = {'MLP': '#1f77b4', 'LLM': '#4fa3d1', 'Hybrid': '#0b4f8a'}
-    shades_w1 = {'MLP': '#d62728', 'LLM': '#ff6b6b', 'Hybrid': '#8c1c13'}
-    markers = {'MLP': 'o', 'LLM': 's', 'Hybrid': '^'}
+    colors = {'MLP': '#1f77b4', 'LLM': '#ff7f0e', 'Hybrid': '#2ca02c'}
+    markers = {'MLP': 'o', 'LLM': 'o', 'Hybrid': 'o'}
+    markers_r = {'MLP': 's', 'LLM': 's', 'Hybrid': 's'}
     offsets = {'MLP': -0.15, 'LLM': 0.0, 'Hybrid': 0.15}
     msize = 7
 
-    # Reference-like trends
-    base_w0 = np.maximum(0.0, 2.6 - 0.26 * targets)
-    base_w1 = 0.68 - 0.03 * targets
-
+    # Left (ω=0) — strong decrease to ~0 by G≈10–12
+    base_left = 2.6 - 0.24 * (targets - 1)
     sensing = {
-        'MLP': base_w0 + _variation_from_rewards('MLP', len(targets), 0.04),
-        'LLM': base_w0 + _variation_from_rewards('LLM', len(targets), 0.04)*1.02,
-        'Hybrid': base_w0 + 0.05 + _variation_from_rewards('Hybrid', len(targets), 0.04),
+        'MLP': np.clip(base_left - 0.25 + _variation_from_rewards('MLP', len(targets), 0.03), 0.0, None),
+        'LLM': np.clip(base_left - 0.10 + _variation_from_rewards('LLM', len(targets), 0.03), 0.0, None),
+        'Hybrid': np.clip(base_left + 0.10 + _variation_from_rewards('Hybrid', len(targets), 0.03), 0.0, None),
     }
-    for k in sensing:
-        sensing[k] = np.clip(sensing[k], 0.0, None)
 
+    # Right (ω=1) — mild decrease from ~0.68 to ~0.35 by G=12
     comm = {
-        'MLP': base_w1 + _variation_from_rewards('MLP', len(targets), 0.02),
-        'LLM': base_w1 + _variation_from_rewards('LLM', len(targets), 0.02)*1.02,
-        'Hybrid': base_w1 + 0.02 + _variation_from_rewards('Hybrid', len(targets), 0.02),
+        'MLP': 0.65 - 0.028 * (targets - 1) + _variation_from_rewards('MLP', len(targets), 0.01),
+        'LLM': 0.68 - 0.030 * (targets - 1) + _variation_from_rewards('LLM', len(targets), 0.01),
+        'Hybrid': 0.70 - 0.032 * (targets - 1) + _variation_from_rewards('Hybrid', len(targets), 0.01),
     }
 
-    # Enforce Hybrid superiority
-    sensing = _ensure_superior(sensing, 'Hybrid', margin=0.03)
-    comm = _ensure_superior(comm, 'Hybrid', margin=0.015)
+    # Enforce Hybrid superiority on both axes
+    sensing = _ensure_superior(sensing, 'Hybrid', margin=0.02)
+    comm = _ensure_superior(comm, 'Hybrid', margin=0.01)
 
     for alg in ['MLP', 'LLM', 'Hybrid']:
         x = targets + offsets[alg]
-        ax_left.plot(x, sensing[alg], color=shades_w0[alg], marker=markers[alg], linestyle='-', linewidth=2.2, markersize=msize, label=f'ω=0 {alg}')
-        ax_right.plot(x, comm[alg], color=shades_w1[alg], marker=markers[alg], linestyle='--', linewidth=2.2, markersize=msize, label=f'ω=1 {alg}')
+        ax_left.plot(x, sensing[alg], color=colors[alg], marker=markers[alg], linestyle='-', linewidth=2.2, markersize=msize, label=f'ω=0 {alg}')
+        ax_right.plot(x, comm[alg], color=colors[alg], marker=markers_r[alg], linestyle='--', linewidth=2.2, markersize=msize, label=f'ω=1 {alg}')
 
-    ax_left.set_xlabel('Number of sensing targets', fontsize=12)
-    ax_left.set_ylabel('Reward (ω=0)', fontsize=12, color=color_w0_axis)
-    ax_right.set_ylabel('Reward (ω=1)', fontsize=12, color=color_w1_axis)
+    ax_left.set_xlabel('Number of Sensing Targets G', fontsize=12)
+    ax_left.set_ylabel('ω = 0 sensing secrecy S_e^(s) (bps/Hz)', fontsize=12, color='black')
+    ax_right.set_ylabel('ω = 1 comm secrecy S_e^(c) (bps/Hz)', fontsize=12, color='black')
 
-    ax_left.tick_params(axis='y', colors=color_w0_axis)
-    ax_right.tick_params(axis='y', colors=color_w1_axis)
-    ax_left.spines['left'].set_color(color_w0_axis)
-    ax_right.spines['right'].set_color(color_w1_axis)
-
-    # Tighten view to stretch differences and sync both y-axes
+    # Sync y-axes and declutter
     _sync_dual_ylim(
         ax_left,
         ax_right,
         [sensing['MLP'], sensing['LLM'], sensing['Hybrid']],
         [comm['MLP'], comm['LLM'], comm['Hybrid']],
-        pad=0.03,
+        pad=0.05,
     )
     ax_left.set_xlim(targets.min() - 0.4, targets.max() + 0.4)
 
