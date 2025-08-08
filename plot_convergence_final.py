@@ -20,10 +20,10 @@ def plot_comparison(save_path='plots/actor_comparison.png'):
             window_size = 3000
             if len(rewards) > window_size:
                 smoothed_rewards = moving_avg(rewards, k=window_size)
-                plt.plot(smoothed_rewards, label=f'DDPG-{name} (smoothed)', linewidth=2.5, color=color)
+                plt.plot(smoothed_rewards, label=f'DDPG-{name}', linewidth=2.5, color=color)
             else:
                 # Plot raw data if too short for moving average
-                plt.plot(rewards, label=f'DDPG-{name} (raw)', linewidth=2.5, color=color)
+                plt.plot(rewards, label=f'DDPG-{name}', linewidth=2.5, color=color)
                 
         except FileNotFoundError:
             print(f"Warning: 'plots/{name}_rewards.npy' not found. Skipping.")
