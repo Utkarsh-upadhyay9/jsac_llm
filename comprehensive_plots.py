@@ -86,6 +86,25 @@ def _set_stretched_ylim(ax, arrays, pad=0.05):
     rng = vmax - vmin
     ax.set_ylim(vmin - pad * rng, vmax + pad * rng)
 
+# New helper: synchronize dual y-axes to identical ranges
+def _sync_dual_ylim(ax_left, ax_right, arrays_left, arrays_right, pad=0.05):
+    vals = np.concatenate([np.asarray(a).ravel() for a in arrays_left + arrays_right if a is not None])
+    vmin, vmax = np.min(vals), np.max(vals)
+    if vmax <= vmin:
+        return
+    rng = vmax - vmin
+    lo, hi = vmin - pad * rng, vmax + pad * rng
+    ax_left.set_ylim(lo, hi)
+    ax_right.set_ylim(lo, hi)
+    # Optional: align major ticks count
+    try:
+        import matplotlib.ticker as mticker
+        locator = mticker.MaxNLocator(nbins=6)
+        ax_left.yaxis.set_major_locator(locator)
+        ax_right.yaxis.set_major_locator(locator)
+    except Exception:
+        pass
+
 # --- Figure 1: Convergence vs Episodes for Different Antennas/Power ---
 def plot_convergence_antennas_power():
     print("Creating Figure 1: Convergence vs Episodes (Antennas/Power) - 6 lines, no title")
@@ -181,9 +200,14 @@ def plot_rewards_vs_vus():
     ax_left.spines['left'].set_color(color_w0_axis)
     ax_right.spines['right'].set_color(color_w1_axis)
 
-    # Tighten view to stretch differences
-    _set_stretched_ylim(ax_left, [sensing['MLP'], sensing['LLM'], sensing['Hybrid']], pad=0.03)
-    _set_stretched_ylim(ax_right, [comm['MLP'], comm['LLM'], comm['Hybrid']], pad=0.03)
+    # Tighten view to stretch differences and sync both y-axes
+    _sync_dual_ylim(
+        ax_left,
+        ax_right,
+        [sensing['MLP'], sensing['LLM'], sensing['Hybrid']],
+        [comm['MLP'], comm['LLM'], comm['Hybrid']],
+        pad=0.03,
+    )
     ax_left.set_xlim(vu_range.min() - 0.4, vu_range.max() + 0.4)
 
     ax_left.grid(True, alpha=0.3)
@@ -251,9 +275,14 @@ def plot_rewards_vs_targets():
     ax_left.spines['left'].set_color(color_w0_axis)
     ax_right.spines['right'].set_color(color_w1_axis)
 
-    # Tighten view to stretch differences
-    _set_stretched_ylim(ax_left, [sensing['MLP'], sensing['LLM'], sensing['Hybrid']], pad=0.03)
-    _set_stretched_ylim(ax_right, [comm['MLP'], comm['LLM'], comm['Hybrid']], pad=0.03)
+    # Tighten view to stretch differences and sync both y-axes
+    _sync_dual_ylim(
+        ax_left,
+        ax_right,
+        [sensing['MLP'], sensing['LLM'], sensing['Hybrid']],
+        [comm['MLP'], comm['LLM'], comm['Hybrid']],
+        pad=0.03,
+    )
     ax_left.set_xlim(targets.min() - 0.4, targets.max() + 0.4)
 
     ax_left.grid(True, alpha=0.3)
