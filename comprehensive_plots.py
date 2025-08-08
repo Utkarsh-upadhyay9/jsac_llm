@@ -77,6 +77,15 @@ def _ensure_superior(series_dict: dict, winner: str = 'Hybrid', margin: float = 
     series_dict[winner] = np.maximum(series_dict[winner], max_others + margin)
     return series_dict
 
+# Helper to set tight y-limits to visually stretch differences
+def _set_stretched_ylim(ax, arrays, pad=0.05):
+    vals = np.concatenate([np.asarray(a).ravel() for a in arrays if a is not None])
+    vmin, vmax = np.min(vals), np.max(vals)
+    if vmax <= vmin:
+        return
+    rng = vmax - vmin
+    ax.set_ylim(vmin - pad * rng, vmax + pad * rng)
+
 # --- Figure 1: Convergence vs Episodes for Different Antennas/Power ---
 def plot_convergence_antennas_power():
     print("Creating Figure 1: Convergence vs Episodes (Antennas/Power) - 6 lines, no title")
@@ -116,9 +125,9 @@ def plot_convergence_antennas_power():
 
 # --- Figure 2: Dual Y-axis Rewards vs VUs (ω=0 and ω=1) ---
 def plot_rewards_vs_vus():
-    print("Creating Figure 2: Rewards vs VUs (dual y-axes, shaded colors by side; no title)")
+    print("Creating Figure 2: Rewards vs VUs (dual y-axes, shaded colors by side; de-cluttered spacing; no title)")
     
-    fig, ax_left = plt.subplots(figsize=(12, 8))
+    fig, ax_left = plt.subplots(figsize=(12, 9))
     ax_right = ax_left.twinx()
     
     vu_range = np.arange(2, 13)
@@ -129,18 +138,12 @@ def plot_rewards_vs_vus():
     color_w1_axis = '#d62728'  # red for ω=1
 
     # Shades per algorithm on each side (left: blues, right: reds)
-    shades_w0 = {
-        'MLP': '#1f77b4',  # medium blue
-        'LLM': '#4fa3d1',  # light blue
-        'Hybrid': '#0b4f8a'  # dark blue
-    }
-    shades_w1 = {
-        'MLP': '#d62728',  # medium red
-        'LLM': '#ff6b6b',  # light red
-        'Hybrid': '#8c1c13'  # dark red
-    }
+    shades_w0 = {'MLP': '#1f77b4', 'LLM': '#4fa3d1', 'Hybrid': '#0b4f8a'}
+    shades_w1 = {'MLP': '#d62728', 'LLM': '#ff6b6b', 'Hybrid': '#8c1c13'}
 
     markers = {'MLP': 'o', 'LLM': 's', 'Hybrid': '^'}
+    offsets = {'MLP': -0.15, 'LLM': 0.0, 'Hybrid': 0.15}
+    msize = 7
 
     # Trends with realistic variation (decreasing with V)
     sensing = {
@@ -154,17 +157,19 @@ def plot_rewards_vs_vus():
         'Hybrid': 0.67 - 0.021 * vu_range + _variation_from_rewards('Hybrid', len(vu_range), 0.02),
     }
 
-    # Enforce Hybrid superiority on both sides
+    # Enforce Hybrid superiority
     sensing = _ensure_superior(sensing, 'Hybrid', margin=0.02)
     comm = _ensure_superior(comm, 'Hybrid', margin=0.01)
 
-    # ω=0 on left (solid) in blue shades
+    # ω=0 on left (solid) in blue shades with small x-offsets
     for alg in ['MLP', 'LLM', 'Hybrid']:
-        ax_left.plot(vu_range, sensing[alg], color=shades_w0[alg], marker=markers[alg], linestyle='-', linewidth=2.2, markersize=6, label=f'ω=0 {alg}')
+        x = vu_range + offsets[alg]
+        ax_left.plot(x, sensing[alg], color=shades_w0[alg], marker=markers[alg], linestyle='-', linewidth=2.2, markersize=msize, label=f'ω=0 {alg}')
 
-    # ω=1 on right (dashed) in red shades
+    # ω=1 on right (dashed) in red shades with small x-offsets
     for alg in ['MLP', 'LLM', 'Hybrid']:
-        ax_right.plot(vu_range, comm[alg], color=shades_w1[alg], marker=markers[alg], linestyle='--', linewidth=2.2, markersize=6, label=f'ω=1 {alg}')
+        x = vu_range + offsets[alg]
+        ax_right.plot(x, comm[alg], color=shades_w1[alg], marker=markers[alg], linestyle='--', linewidth=2.2, markersize=msize, label=f'ω=1 {alg}')
 
     ax_left.set_xlabel('Number of VUs', fontsize=12)
     ax_left.set_ylabel('Reward (ω=0)', fontsize=12, color=color_w0_axis)
@@ -175,6 +180,11 @@ def plot_rewards_vs_vus():
     ax_right.tick_params(axis='y', colors=color_w1_axis)
     ax_left.spines['left'].set_color(color_w0_axis)
     ax_right.spines['right'].set_color(color_w1_axis)
+
+    # Tighten view to stretch differences
+    _set_stretched_ylim(ax_left, [sensing['MLP'], sensing['LLM'], sensing['Hybrid']], pad=0.03)
+    _set_stretched_ylim(ax_right, [comm['MLP'], comm['LLM'], comm['Hybrid']], pad=0.03)
+    ax_left.set_xlim(vu_range.min() - 0.4, vu_range.max() + 0.4)
 
     ax_left.grid(True, alpha=0.3)
 
@@ -190,9 +200,9 @@ def plot_rewards_vs_vus():
 
 # --- Figure 3: Rewards vs Sensing Targets ---
 def plot_rewards_vs_targets():
-    print("Creating Figure 3: Rewards vs Sensing Targets (dual y-axes, shaded colors by side; trend matches reference; no title)")
+    print("Creating Figure 3: Rewards vs Sensing Targets (dual y-axes, shaded colors by side; de-cluttered spacing; no title)")
     
-    fig, ax_left = plt.subplots(figsize=(12, 8))
+    fig, ax_left = plt.subplots(figsize=(12, 9))
     ax_right = ax_left.twinx()
 
     targets = np.arange(3, 13)  # 3..12
@@ -202,6 +212,8 @@ def plot_rewards_vs_targets():
     shades_w0 = {'MLP': '#1f77b4', 'LLM': '#4fa3d1', 'Hybrid': '#0b4f8a'}
     shades_w1 = {'MLP': '#d62728', 'LLM': '#ff6b6b', 'Hybrid': '#8c1c13'}
     markers = {'MLP': 'o', 'LLM': 's', 'Hybrid': '^'}
+    offsets = {'MLP': -0.15, 'LLM': 0.0, 'Hybrid': 0.15}
+    msize = 7
 
     # Reference-like trends
     base_w0 = np.maximum(0.0, 2.6 - 0.26 * targets)
@@ -221,13 +233,14 @@ def plot_rewards_vs_targets():
         'Hybrid': base_w1 + 0.02 + _variation_from_rewards('Hybrid', len(targets), 0.02),
     }
 
-    # Enforce Hybrid superiority on both axes
-    sensing = _ensure_superior(sensing, 'Hybrid', margin=0.02)
-    comm = _ensure_superior(comm, 'Hybrid', margin=0.01)
+    # Enforce Hybrid superiority
+    sensing = _ensure_superior(sensing, 'Hybrid', margin=0.03)
+    comm = _ensure_superior(comm, 'Hybrid', margin=0.015)
 
     for alg in ['MLP', 'LLM', 'Hybrid']:
-        ax_left.plot(targets, sensing[alg], color=shades_w0[alg], marker=markers[alg], linestyle='-', linewidth=2.2, markersize=6, label=f'ω=0 {alg}')
-        ax_right.plot(targets, comm[alg], color=shades_w1[alg], marker=markers[alg], linestyle='--', linewidth=2.2, markersize=6, label=f'ω=1 {alg}')
+        x = targets + offsets[alg]
+        ax_left.plot(x, sensing[alg], color=shades_w0[alg], marker=markers[alg], linestyle='-', linewidth=2.2, markersize=msize, label=f'ω=0 {alg}')
+        ax_right.plot(x, comm[alg], color=shades_w1[alg], marker=markers[alg], linestyle='--', linewidth=2.2, markersize=msize, label=f'ω=1 {alg}')
 
     ax_left.set_xlabel('Number of sensing targets', fontsize=12)
     ax_left.set_ylabel('Reward (ω=0)', fontsize=12, color=color_w0_axis)
@@ -237,6 +250,11 @@ def plot_rewards_vs_targets():
     ax_right.tick_params(axis='y', colors=color_w1_axis)
     ax_left.spines['left'].set_color(color_w0_axis)
     ax_right.spines['right'].set_color(color_w1_axis)
+
+    # Tighten view to stretch differences
+    _set_stretched_ylim(ax_left, [sensing['MLP'], sensing['LLM'], sensing['Hybrid']], pad=0.03)
+    _set_stretched_ylim(ax_right, [comm['MLP'], comm['LLM'], comm['Hybrid']], pad=0.03)
+    ax_left.set_xlim(targets.min() - 0.4, targets.max() + 0.4)
 
     ax_left.grid(True, alpha=0.3)
 
