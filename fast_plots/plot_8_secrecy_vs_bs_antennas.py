@@ -1,8 +1,4 @@
 #!/usr/bin/env python3
-"""
-JSAC Figure 8: Secrecy Rate vs BS Antennas
-Fast plotting script using pre-saved data (no retraining required)
-"""
 
 import numpy as np
 import matplotlib.pyplot as plt

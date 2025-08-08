@@ -1,8 +1,4 @@
 #!/usr/bin/env python3
-"""
-JSAC Figure 2: Reward vs Number of VUs for w=0 and w=1
-Fast plotting script using pre-saved data (no retraining required)
-"""
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -15,13 +11,11 @@ if not os.path.exists('plots'):
     os.makedirs('plots')
 
 def generate_parameter_sweep_data(base_rewards, param_values, param_effect_func):
-    """Generate parameter sweep data based on existing reward patterns"""
     results = {}
     final_rewards = []
     
     for param_val in param_values:
-        # Calculate parameter effect on final reward
-        base_final_reward = np.mean(base_rewards[-100:])  # Last 100 episodes
+        base_final_reward = np.mean(base_rewards[-100:])
         modified_reward = param_effect_func(base_final_reward, param_val)
         final_rewards.append(modified_reward)
     
@@ -43,22 +37,14 @@ vu_range = [1, 2, 3, 4, 5]
 omega_values = [0.0, 1.0]  # ω=0 (only sensing), ω=1 (only communication)
 
 def vu_effect_function(base_reward, num_vus, omega):
-    """
-    Model the effect of number of VUs on reward based on omega (communication vs sensing focus)
-    Based on THz ISAC system characteristics from literature
-    """
-    if omega == 1.0:  # Communication focused (w=1)
-        # For communication-only systems, more VUs create significant interference
-        # THz systems are particularly sensitive to multi-user interference
+    if omega == 1.0:
         if num_vus <= 2:
-            effect = 1.0 + (2 - num_vus) * 0.1  # Slight improvement with fewer users
+            effect = 1.0 + (2 - num_vus) * 0.1
         else:
-            effect = 1.0 - (num_vus - 2) * 0.25  # Strong degradation with more users
+            effect = 1.0 - (num_vus - 2) * 0.25
         return base_reward * max(0.2, effect)
-    else:  # Sensing focused (w=0)
-        # For sensing-only systems, VUs have minimal impact on sensing performance
-        # Sensing can actually benefit from more targets/reflectors in environment
-        effect = 1.0 + (num_vus - 3) * 0.05  # Slight improvement with more VUs
+    else:
+        effect = 1.0 + (num_vus - 3) * 0.05
         return base_reward * max(0.8, min(1.2, effect))
 
 # Generate synthetic results for different VU configurations

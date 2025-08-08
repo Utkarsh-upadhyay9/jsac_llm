@@ -21,7 +21,7 @@ Results (2000 episodes):
 - MLP: 0.5643 mean, 3.9950 peak, 27.2% consistency  
 - LLM: 0.5638 mean, 3.4050 peak, 27.2% consistency
 
-Environment: Complex multi-user beamforming (128D actions) with RIS/ISAC constraints
+Environment: Complex multi-user beamforming (128D actions) with basic RIS phase optimization
 """
 
 import numpy as np

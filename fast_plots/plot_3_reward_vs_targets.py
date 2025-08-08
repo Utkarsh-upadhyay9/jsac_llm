@@ -1,4 +1,10 @@
 #!/usr/bin/env python3
+
+import numpy as np
+import matplotlib.pyplot as plt
+import os
+
+print("=== JSAC Figure 3: Reward vs Number of Sensing Targets (Fast) ===")env python3
 """
 JSAC Figure 3: Reward vs Number of Sensing Targets for w=0 and w=1
 Fast plotting script using pre-saved data (no retraining required)

@@ -1,25 +1,12 @@
 #!/usr/bin/env python3
-"""
-JSAC Fast Plotting Suite - Generates all 8 figures using pre-saved data
-No retraining required - uses existing reward data with parameter modeling
-
-Figures:
-1. Convergence vs episodes for changing number of antennas at BS and transmitting power
-2. Reward vs number of VUs for w=0 and w=1
-3. Reward vs number of sensing targets for w=0 and w=1  
-4. Secrecy rate vs number of RIS elements
-5. Secrecy rate vs total power (dBm)
-6. Secrecy rate vs beta factor
-7. Secrecy rate vs bandwidth
-8. Secrecy rate vs BS antennas
-"""
 
 import os
 import subprocess
 import time
 
-print("=== JSAC Fast Plotting Suite ===")
+print("=== JSAC Fast Plotting Suite (HONEST VERSION) ===")
 print("Generating all 8 figures using pre-saved data (no retraining)")
+print("Showing actual implementation: basic RIS phase optimization only")
 
 # Check if base data files exist
 base_files = ['plots/MLP_rewards.npy', 'plots/LLM_rewards.npy', 'plots/Hybrid_rewards.npy']

@@ -1,8 +1,4 @@
 #!/usr/bin/env python3
-"""
-JSAC Figure 1: Convergence of 3 agents (MLP, LLM, Hybrid) matching paper Figure 2a
-Fast plotting script using pre-saved data (no retraining required)
-"""
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -14,7 +10,7 @@ print("=== JSAC Figure 1: Agent Convergence Comparison (Fast) ===")
 if not os.path.exists('plots'):
     os.makedirs('plots')
 
-def moving_avg(x, window=2400):
+def moving_avg(x, window=3000):
     if len(x) < window:
         return x
     return np.convolve(x, np.ones(window)/window, mode='valid')
