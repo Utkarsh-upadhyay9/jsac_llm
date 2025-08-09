@@ -1,0 +1,30 @@
+# Code Owners for JSAC LLM Project
+# This file defines who should review changes to specific parts of the codebase
+
+# Global ownership - all files
+* @Utkarsh-upadhyay9
+
+# Core implementation files
+jsac.py @Utkarsh-upadhyay9
+jsac_active_ris_dam.py @Utkarsh-upadhyay9
+jsac_combined_gpu.py @Utkarsh-upadhyay9
+
+# Plotting and visualization
+*plots*.py @Utkarsh-upadhyay9
+comprehensive_plots.py @Utkarsh-upadhyay9
+plot_convergence_final.py @Utkarsh-upadhyay9
+
+# Configuration and setup
+requirements.txt @Utkarsh-upadhyay9
+main.py @Utkarsh-upadhyay9
+
+# Documentation
+README.md @Utkarsh-upadhyay9
+*.md @Utkarsh-upadhyay9
+
+# GitHub configuration
+.github/ @Utkarsh-upadhyay9
+
+# Results and data
+plots/ @Utkarsh-upadhyay9
+*.npy @Utkarsh-upadhyay9

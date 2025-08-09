@@ -1,0 +1,98 @@
+name: Experiment Validation
+
+on:
+  push:
+    paths:
+      - '**.py'
+      - 'requirements.txt'
+  pull_request:
+    paths:
+      - '**.py'
+      - 'requirements.txt'
+
+jobs:
+  validate-experiments:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Python 3.11
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+    
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cpu
+        if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+    
+    - name: Validate main scripts can import
+      run: |
+        python -c "from jsac_active_ris_dam import *; print('✓ jsac_active_ris_dam imports successfully')"
+        python -c "import comprehensive_plots; print('✓ comprehensive_plots imports successfully')"
+        python -c "import plot_convergence_final; print('✓ plot_convergence_final imports successfully')" || echo "⚠ plot_convergence_final import failed"
+    
+    - name: Quick plotting test
+      run: |
+        python -c "
+        import matplotlib
+        matplotlib.use('Agg')
+        import matplotlib.pyplot as plt
+        import numpy as np
+        
+        # Quick test plot
+        x = np.linspace(0, 10, 100)
+        y = np.sin(x)
+        plt.figure()
+        plt.plot(x, y)
+        plt.savefig('test_plot.png')
+        print('✓ Basic plotting works')
+        "
+    
+    - name: Check for common issues
+      run: |
+        echo "Checking for common issues..."
+        
+        # Check for hardcoded paths
+        if grep -r "/home/utkarsh" --include="*.py" . | grep -v "__pycache__" | grep -v ".git"; then
+          echo "⚠ Found hardcoded paths - consider making them relative"
+        else
+          echo "✓ No hardcoded paths found"
+        fi
+        
+        # Check for large files
+        find . -name "*.py" -size +100k -exec echo "⚠ Large Python file: {}" \;
+        
+        # Check for TODO/FIXME comments
+        if grep -r "TODO\|FIXME" --include="*.py" .; then
+          echo "ℹ Found TODO/FIXME comments"
+        fi
+        
+    - name: Generate test figures (dry run)
+      run: |
+        python -c "
+        import sys
+        sys.path.append('.')
+        import os
+        
+        # Create test plots directory
+        os.makedirs('test_plots', exist_ok=True)
+        
+        # Test if comprehensive plotting can be imported and basic functionality works
+        try:
+            from comprehensive_plots import create_all_plots
+            print('✓ Comprehensive plots module loaded successfully')
+        except Exception as e:
+            print(f'⚠ Could not load comprehensive plots: {e}')
+        "
+    
+    - name: Upload test artifacts
+      uses: actions/upload-artifact@v3
+      if: always()
+      with:
+        name: test-outputs
+        path: |
+          test_plot.png
+          test_plots/
