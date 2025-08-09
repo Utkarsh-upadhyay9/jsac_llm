@@ -413,7 +413,7 @@ def plot_secrecy_vs_ris_elements():
     y_max4 = max(a.max() for a in y_arrays4)
     margin = (y_max4 - y_min4) * 0.05  # 5% margin for visibility
     ax.set_ylim(y_min4 - margin, y_max4 + margin)
-    ax.set_xlim(ris_elements[0], ris_elements[-1])
+    ax.set_xlim(0.4, ris_elements[-1])  # Start x-axis from 0.4
     ax.margins(x=0)
     ax.autoscale(tight=True)
     
