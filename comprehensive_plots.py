@@ -356,11 +356,11 @@ def plot_rewards_vs_targets():
     ax_left.spines['top'].set_visible(True)
     ax_right.spines['top'].set_visible(True)
 
-    # Combined legend at bottom to avoid blocking lines
+    # Combined legend inside plot box at bottom
     lines_l, labels_l = ax_left.get_legend_handles_labels()
     lines_r, labels_r = ax_right.get_legend_handles_labels()
     ax_left.legend(lines_l + lines_r, labels_l + labels_r, loc='lower center', fontsize=12, ncol=3, frameon=True, 
-                   fancybox=True, shadow=True, framealpha=0.9, bbox_to_anchor=(0.5, -0.05))
+                   fancybox=True, shadow=True, framealpha=0.9)
 
     plt.tight_layout()
     plt.savefig(f"{plots_dir}/fig3_rewards_vs_targets.png", dpi=300, bbox_inches='tight')
