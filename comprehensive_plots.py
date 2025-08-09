@@ -1,14 +1,14 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Comprehensive Plotting Suite for Active RIS + DAM JSAC System
+Comprehensive JSAC Active RIS Plotting Suite
 All 8 figure types as requested by user
 """
 
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib
-matplotlib.use('Agg')  # Non-interactive backend
+matplotlib.use('Agg')  # Use non-GUI backend for headless execution
 import torch
 import sys
 import os
@@ -150,6 +150,7 @@ def plot_convergence_antennas_power():
     y_max = max(a.max() for a in y_arrays)
     ax.set_ylim(y_min, y_max)
     ax.margins(x=0, y=0)
+    ax.autoscale(tight=True)
     
     plt.tight_layout()
     plt.savefig(f"{plots_dir}/fig1_convergence_antennas_power.png", dpi=300, bbox_inches='tight')
@@ -355,6 +356,8 @@ def plot_rewards_vs_targets():
     ax_left.set_xlim(targets[0], targets[-1])
     ax_left.margins(x=0, y=0)
     ax_right.margins(x=0, y=0)
+    ax_left.autoscale(tight=True)
+    ax_right.autoscale(tight=True)
 
     ax_left.grid(True, alpha=0.3)
     ax_left.spines['top'].set_visible(True)
@@ -419,6 +422,7 @@ def plot_secrecy_vs_ris_elements():
     ax.set_ylim(y_min4 - margin, y_max4 + margin)
     ax.set_xlim(ris_elements[0], ris_elements[-1])
     ax.margins(x=0)
+    ax.autoscale(tight=True)
     
     plt.tight_layout()
     plt.savefig(f"{plots_dir}/fig4_secrecy_vs_ris_elements.png", dpi=300, bbox_inches='tight')
@@ -470,6 +474,7 @@ def plot_secrecy_vs_power():
     ax.set_ylim(y_min5, y_max5)
     ax.set_xlim(power_dbm[0], power_dbm[-1])
     ax.margins(x=0, y=0)
+    ax.autoscale(tight=True)
     
     plt.tight_layout()
     plt.savefig(f"{plots_dir}/fig5_secrecy_vs_power.png", dpi=300, bbox_inches='tight')
@@ -520,6 +525,7 @@ def plot_secrecy_vs_beta():
     ax.set_ylim(y_min6, y_max6)
     ax.set_xlim(beta_range[0], beta_range[-1])
     ax.margins(x=0, y=0)
+    ax.autoscale(tight=True)
     
     plt.tight_layout()
     plt.savefig(f"{plots_dir}/fig6_secrecy_vs_beta.png", dpi=300, bbox_inches='tight')
@@ -568,6 +574,7 @@ def plot_secrecy_vs_bandwidth():
     ax.set_ylim(y_min7, y_max7)
     ax.set_xlim(bw[0], bw[-1])
     ax.margins(x=0, y=0)
+    ax.autoscale(tight=True)
     
     plt.tight_layout()
     plt.savefig(f"{plots_dir}/fig7_secrecy_vs_bandwidth.png", dpi=300, bbox_inches='tight')
@@ -618,6 +625,7 @@ def plot_secrecy_vs_antennas():
     ax.set_ylim(y_min8, y_max8)
     ax.set_xlim(ants[0], ants[-1])
     ax.margins(x=0, y=0)
+    ax.autoscale(tight=True)
     
     plt.tight_layout()
     plt.savefig(f"{plots_dir}/fig8_secrecy_vs_antennas.png", dpi=300, bbox_inches='tight')
@@ -663,6 +671,7 @@ def plot_secrecy_rate_convergence():
     ax.set_ylim(y_minM, y_maxM)
     ax.set_xlim(episodes[0], episodes[-1])
     ax.margins(x=0, y=0)
+    ax.autoscale(tight=True)
     
     plt.tight_layout()
     plt.savefig(f"{plots_dir}/main_secrecy_rate_convergence.png", dpi=300, bbox_inches='tight')
