@@ -87,16 +87,14 @@ def _set_stretched_ylim(ax, arrays, pad=0.05):
     ax.set_ylim(vmin - pad * rng, vmax + pad * rng)
 
 # New helper: synchronize dual y-axes to identical ranges
-def _sync_dual_ylim(ax_left, ax_right, arrays_left, arrays_right, pad=0.05):
+def _sync_dual_ylim(ax_left, ax_right, arrays_left, arrays_right, pad=0.0):  # pad default 0 for no gap
     vals = np.concatenate([np.asarray(a).ravel() for a in arrays_left + arrays_right if a is not None])
     vmin, vmax = np.min(vals), np.max(vals)
     if vmax <= vmin:
         return
-    rng = vmax - vmin
-    lo, hi = vmin - pad * rng, vmax + pad * rng
-    ax_left.set_ylim(lo, hi)
-    ax_right.set_ylim(lo, hi)
-    # Optional: align major ticks count
+    # No extra padding to satisfy "touch axes" requirement
+    ax_left.set_ylim(vmin, vmax)
+    ax_right.set_ylim(vmin, vmax)
     try:
         import matplotlib.ticker as mticker
         locator = mticker.MaxNLocator(nbins=6)
@@ -145,6 +143,13 @@ def plot_convergence_antennas_power():
     # Force exact x-axis limits - no padding
     ax = plt.gca()
     ax.set_xlim(ax.get_xlim()[0], ax.get_xlim()[1])
+    
+    # After plotting (Figure 1) enforce y limits flush
+    y_arrays = [mlp_dam, mlp_no_dam, llm_dam, llm_no_dam, hybrid_dam, hybrid_no_dam]
+    y_min = min(a.min() for a in y_arrays)
+    y_max = max(a.max() for a in y_arrays)
+    ax.set_ylim(y_min, y_max)
+    ax.margins(x=0, y=0)
     
     plt.tight_layout()
     plt.savefig(f"{plots_dir}/fig1_convergence_antennas_power.png", dpi=300, bbox_inches='tight')
@@ -207,24 +212,29 @@ def plot_rewards_vs_vus():
     ax_left.spines['left'].set_color(color_w0_axis)
     ax_right.spines['right'].set_color(color_w1_axis)
 
-    # Sync y-axes and declutter
+    # Sync y-axes and declutter (no padding)
     _sync_dual_ylim(
         ax_left,
         ax_right,
         [sensing['MLP'], sensing['LLM'], sensing['Hybrid']],
         [comm['MLP'], comm['LLM'], comm['Hybrid']],
-        pad=0.05,
+        pad=0.0,
     )
-    ax_left.set_xlim(vu_range[0], vu_range[-1])
 
-    ax_left.grid(True, alpha=0.3)
-    ax_left.spines['top'].set_visible(True)
-    ax_right.spines['top'].set_visible(True)
+    # Determine true x-span including offsets so lines touch axes
+    all_x = []
+    for alg in ['MLP', 'LLM', 'Hybrid']:
+        all_x.append((vu_range + offsets[alg])[0])
+        all_x.append((vu_range + offsets[alg])[-1])
+    x_min, x_max = min(all_x), max(all_x)
+    ax_left.set_xlim(x_min, x_max)
+    ax_left.margins(x=0, y=0)
+    ax_right.margins(x=0, y=0)
 
-    # Legend
+    # Legend fontsize 14
     lines_l, labels_l = ax_left.get_legend_handles_labels()
     lines_r, labels_r = ax_right.get_legend_handles_labels()
-    ax_left.legend(lines_l + lines_r, labels_l + labels_r, loc='upper right', fontsize=10, ncol=2)
+    ax_left.legend(lines_l + lines_r, labels_l + labels_r, loc='upper right', fontsize=14, ncol=2)
 
     # Force exact x-axis limits - no padding
     ax = plt.gca()
@@ -329,22 +339,21 @@ def plot_rewards_vs_targets():
         ax_right,
         [sensing['MLP'], sensing['LLM'], sensing['Hybrid']],
         [comm['MLP'], comm['LLM'], comm['Hybrid']],
-        pad=0.05,
+        pad=0.0,
     )
-    ax_left.set_xlim(targets[0], targets[-1])
+    all_x_t = []
+    for alg in ['MLP', 'LLM', 'Hybrid']:
+        all_x_t.append((targets + offsets[alg])[0])
+        all_x_t.append((targets + offsets[alg])[-1])
+    x_min_t, x_max_t = min(all_x_t), max(all_x_t)
+    ax_left.set_xlim(x_min_t, x_max_t)
+    ax_left.margins(x=0, y=0)
+    ax_right.margins(x=0, y=0)
 
-    ax_left.grid(True, alpha=0.3)
-    
-    # MATLAB-style appearance
-    ax_left.spines['top'].set_visible(True)
-    ax_left.spines['right'].set_visible(True)
-    ax_right.spines['top'].set_visible(True)
-    ax_right.spines['left'].set_visible(True)
-
-    # Combined legend
+    # Legend fontsize 14
     lines_l, labels_l = ax_left.get_legend_handles_labels()
     lines_r, labels_r = ax_right.get_legend_handles_labels()
-    ax_left.legend(lines_l + lines_r, labels_l + labels_r, loc='upper right', fontsize=9, ncol=2)
+    ax_left.legend(lines_l + lines_r, labels_l + labels_r, loc='upper right', fontsize=14, ncol=2)
 
     # Force exact x-axis limits - no padding
     ax = plt.gca()
@@ -386,7 +395,7 @@ def plot_secrecy_vs_ris_elements():
     plt.xlabel('Number of RIS Elements', fontsize=14)
     plt.ylabel('Joint Secrecy Rate (bps/Hz)', fontsize=14)
     # No title
-    plt.legend(fontsize=10, ncol=2)
+    plt.legend(fontsize=14, ncol=2)
     plt.grid(True, alpha=0.3)
     
     # MATLAB-style appearance
@@ -397,6 +406,14 @@ def plot_secrecy_vs_ris_elements():
     # Force exact x-axis limits - no padding
     ax = plt.gca()
     ax.set_xlim(ax.get_xlim()[0], ax.get_xlim()[1])
+    
+    # After plotting (Figure 4) enforce y limits flush
+    y_arrays4 = [mlp_with, llm_with, hybrid_with, mlp_without, llm_without, hybrid_without]
+    y_min4 = min(a.min() for a in y_arrays4)
+    y_max4 = max(a.max() for a in y_arrays4)
+    ax.set_ylim(y_min4, y_max4)
+    ax.set_xlim(ris_elements[0], ris_elements[-1])
+    ax.margins(x=0, y=0)
     
     plt.tight_layout()
     plt.savefig(f"{plots_dir}/fig4_secrecy_vs_ris_elements.png", dpi=300, bbox_inches='tight')
@@ -429,7 +446,7 @@ def plot_secrecy_vs_power():
 
     plt.xlabel('Total Power (dBm)', fontsize=14)
     plt.ylabel('Joint Secrecy Rate (bps/Hz)', fontsize=14)
-    plt.legend(fontsize=10, ncol=2)
+    plt.legend(fontsize=14, ncol=2)
     plt.grid(True, alpha=0.3)
     
     # MATLAB-style appearance
@@ -440,6 +457,14 @@ def plot_secrecy_vs_power():
     # Force exact x-axis limits - no padding
     ax = plt.gca()
     ax.set_xlim(ax.get_xlim()[0], ax.get_xlim()[1])
+    
+    # After plotting (Figure 5) enforce y limits flush
+    y_arrays5 = [secrecy_mlp_dam, secrecy_mlp_no, secrecy_llm_dam, secrecy_llm_no, secrecy_hyb_dam, secrecy_hyb_no]
+    y_min5 = min(a.min() for a in y_arrays5)
+    y_max5 = max(a.max() for a in y_arrays5)
+    ax.set_ylim(y_min5, y_max5)
+    ax.set_xlim(power_dbm[0], power_dbm[-1])
+    ax.margins(x=0, y=0)
     
     plt.tight_layout()
     plt.savefig(f"{plots_dir}/fig5_secrecy_vs_power.png", dpi=300, bbox_inches='tight')
@@ -471,7 +496,7 @@ def plot_secrecy_vs_beta():
 
     plt.xlabel('Beta (β)', fontsize=14)
     plt.ylabel('Joint Secrecy Rate (bps/Hz)', fontsize=14)
-    plt.legend(fontsize=10, ncol=2)
+    plt.legend(fontsize=14, ncol=2)
     plt.grid(True, alpha=0.3)
     
     # MATLAB-style appearance
@@ -483,6 +508,14 @@ def plot_secrecy_vs_beta():
     ax = plt.gca()
     ax.set_xlim(ax.get_xlim()[0], ax.get_xlim()[1])
     
+    # After plotting (Figure 6) enforce y limits flush
+    y_arrays6 = [secrecy_mlp_dam, secrecy_mlp_no, secrecy_llm_dam, secrecy_llm_no, secrecy_hyb_dam, secrecy_hyb_no]
+    y_min6 = min(a.min() for a in y_arrays6)
+    y_max6 = max(a.max() for a in y_arrays6)
+    ax.set_ylim(y_min6, y_max6)
+    ax.set_xlim(beta_range[0], beta_range[-1])
+    ax.margins(x=0, y=0)
+    
     plt.tight_layout()
     plt.savefig(f"{plots_dir}/fig6_secrecy_vs_beta.png", dpi=300, bbox_inches='tight')
     plt.close()
@@ -492,7 +525,7 @@ def plot_secrecy_vs_beta():
 def plot_secrecy_vs_bandwidth():
     print("Creating Figure 7: Secrecy Rate vs Bandwidth (VU=2 vs 10; add realism; 6 lines; no title)")
 
-    plt.figure(figsize=(12, 8))
+    plt.figure(figsize=(8, 8))
 
     bw = np.arange(100, 1001, 50)
 
@@ -512,7 +545,7 @@ def plot_secrecy_vs_bandwidth():
 
     plt.xlabel('Bandwidth (MHz)', fontsize=14)
     plt.ylabel('Joint Secrecy Rate (bps/Hz)', fontsize=14)
-    plt.legend(fontsize=10, ncol=2)
+    plt.legend(fontsize=14, ncol=2)
     plt.grid(True, alpha=0.3)
     
     # MATLAB-style appearance
@@ -523,6 +556,14 @@ def plot_secrecy_vs_bandwidth():
     # Force exact x-axis limits - no padding
     ax = plt.gca()
     ax.set_xlim(ax.get_xlim()[0], ax.get_xlim()[1])
+    
+    # After plotting (Figure 7) enforce y limits flush
+    y_arrays7 = [vu2_mlp, vu10_mlp, vu2_llm, vu10_llm, vu2_hyb, vu10_hyb]
+    y_min7 = min(a.min() for a in y_arrays7)
+    y_max7 = max(a.max() for a in y_arrays7)
+    ax.set_ylim(y_min7, y_max7)
+    ax.set_xlim(bw[0], bw[-1])
+    ax.margins(x=0, y=0)
     
     plt.tight_layout()
     plt.savefig(f"{plots_dir}/fig7_secrecy_vs_bandwidth.png", dpi=300, bbox_inches='tight')
@@ -554,7 +595,7 @@ def plot_secrecy_vs_antennas():
 
     plt.xlabel('Number of BS Antennas', fontsize=14)
     plt.ylabel('Joint Secrecy Rate (bps/Hz)', fontsize=14)
-    plt.legend(fontsize=10, ncol=2)
+    plt.legend(fontsize=14, ncol=2)
     plt.grid(True, alpha=0.3)
     
     # MATLAB-style appearance
@@ -565,6 +606,14 @@ def plot_secrecy_vs_antennas():
     # Force exact x-axis limits - no padding
     ax = plt.gca()
     ax.set_xlim(ax.get_xlim()[0], ax.get_xlim()[1])
+    
+    # After plotting (Figure 8) enforce y limits flush
+    y_arrays8 = [vu2_mlp, vu10_mlp, vu2_llm, vu10_llm, vu2_hyb, vu10_hyb]
+    y_min8 = min(a.min() for a in y_arrays8)
+    y_max8 = max(a.max() for a in y_arrays8)
+    ax.set_ylim(y_min8, y_max8)
+    ax.set_xlim(ants[0], ants[-1])
+    ax.margins(x=0, y=0)
     
     plt.tight_layout()
     plt.savefig(f"{plots_dir}/fig8_secrecy_vs_antennas.png", dpi=300, bbox_inches='tight')
@@ -602,6 +651,14 @@ def plot_secrecy_rate_convergence():
     # Force exact x-axis limits - no padding
     ax = plt.gca()
     ax.set_xlim(ax.get_xlim()[0], ax.get_xlim()[1])
+    
+    # After plotting (Main plot) enforce y limits flush
+    y_arraysM = [mlp_secrecy, llm_secrecy, hybrid_secrecy]
+    y_minM = min(a.min() for a in y_arraysM)
+    y_maxM = max(a.max() for a in y_arraysM)
+    ax.set_ylim(y_minM, y_maxM)
+    ax.set_xlim(episodes[0], episodes[-1])
+    ax.margins(x=0, y=0)
     
     plt.tight_layout()
     plt.savefig(f"{plots_dir}/main_secrecy_rate_convergence.png", dpi=300, bbox_inches='tight')
