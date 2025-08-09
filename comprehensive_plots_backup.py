@@ -1,5 +1,9 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
+#!/usr/bin/env pyt# Import our implementations
+from jsac_active_ris_dam import (
+    ActiveRISISACEnvironment, ActiveRISMLP, ActiveRISLLM, ActiveRISHybrid,
+    compute_dam_enhanced_snr, compute_dam_eavesdropper_sinr,
+    ris_array, N, M, V, K, P_active_max, G_active_max, tau_max, omega, beta, device
+) utf-8 -*-
 """
 Comprehensive Plotting Suite for Active RIS + DAM JSAC System
 All 8 figure types as requested by user
@@ -19,7 +23,19 @@ sys.path.append('/home/utkarsh/jsac_llm')
 # Import our implementations
 from jsac_active_ris_dam import (
     ActiveRISISACEnvironment, ActiveRISMLP, ActiveRISLLM, ActiveRISHybrid,
-    compute_dam_enhanced_snr, compute_dam_eavesdropper_sinr,
+    compute_dam_enhanced_snr, comput    plt.xlabel('Episode', fontsize=14)
+    plt.ylabel('Joint Secrecy Rate (bps/Hz)', fontsize=14)
+    plt.legend(fontsize=12)
+    plt.grid(True, alpha=0.3)
+    
+    # MATLAB-style appearance
+    ax = plt.gca()
+    ax.spines['top'].set_visible(True)
+    ax.spines['right'].set_visible(True)
+    
+    # Force exact axis limits
+    ax.set_xlim(episodes[0], episodes[-1])
+    ax.set_ylim(0, max([max(mlp_6ant), max(llm_6ant), max(hybrid_6ant), max(mlp_20db), max(llm_20db), max(hybrid_20db)]) * 1.05)esdropper_sinr,
     ris_array, N, M, V, K, P_active_max, G_active_max, tau_max, omega, beta, device
 )
 
@@ -132,19 +148,15 @@ def plot_convergence_antennas_power():
     plt.plot(episodes, hybrid_dam, 'g-', label='DAM Hybrid', linewidth=2.0)
     plt.plot(episodes, hybrid_no_dam, 'g--', label='w/o DAM Hybrid', linewidth=2.0)
     
-    plt.xlabel('Episodes', fontsize=14)
-    plt.ylabel('Joint Secrecy Rate', fontsize=14)
+    plt.xlabel('Episodes', fontsize=12)
+    plt.ylabel('Joint Secrecy Rate', fontsize=12)
     # No title per request
-    plt.legend(fontsize=14, ncol=2)
+    plt.legend(fontsize=12, ncol=2)
     plt.grid(True, alpha=0.3)
     plt.xlim(episodes.min(), episodes.max())
     ax = plt.gca()
     ax.spines['top'].set_visible(True)
     ax.spines['right'].set_visible(True)
-    
-    # Force exact x-axis limits - no padding
-    ax = plt.gca()
-    ax.set_xlim(ax.get_xlim()[0], ax.get_xlim()[1])
     
     plt.tight_layout()
     plt.savefig(f"{plots_dir}/fig1_convergence_antennas_power.png", dpi=300, bbox_inches='tight')
@@ -215,6 +227,7 @@ def plot_rewards_vs_vus():
         [comm['MLP'], comm['LLM'], comm['Hybrid']],
         pad=0.05,
     )
+    # Force exact x-axis limits - no padding
     ax_left.set_xlim(vu_range[0], vu_range[-1])
 
     ax_left.grid(True, alpha=0.3)
@@ -226,10 +239,6 @@ def plot_rewards_vs_vus():
     lines_r, labels_r = ax_right.get_legend_handles_labels()
     ax_left.legend(lines_l + lines_r, labels_l + labels_r, loc='upper right', fontsize=10, ncol=2)
 
-    # Force exact x-axis limits - no padding
-    ax = plt.gca()
-    ax.set_xlim(ax.get_xlim()[0], ax.get_xlim()[1])
-    
     plt.tight_layout()
     plt.savefig(f"{plots_dir}/fig2_rewards_vs_vus.png", dpi=300, bbox_inches='tight')
     plt.close()
@@ -331,6 +340,7 @@ def plot_rewards_vs_targets():
         [comm['MLP'], comm['LLM'], comm['Hybrid']],
         pad=0.05,
     )
+    # Force exact x-axis limits - no padding
     ax_left.set_xlim(targets[0], targets[-1])
 
     ax_left.grid(True, alpha=0.3)
@@ -346,10 +356,6 @@ def plot_rewards_vs_targets():
     lines_r, labels_r = ax_right.get_legend_handles_labels()
     ax_left.legend(lines_l + lines_r, labels_l + labels_r, loc='upper right', fontsize=9, ncol=2)
 
-    # Force exact x-axis limits - no padding
-    ax = plt.gca()
-    ax.set_xlim(ax.get_xlim()[0], ax.get_xlim()[1])
-    
     plt.tight_layout()
     plt.savefig(f"{plots_dir}/fig3_rewards_vs_targets.png", dpi=300, bbox_inches='tight')
     plt.close()
@@ -393,11 +399,10 @@ def plot_secrecy_vs_ris_elements():
     ax = plt.gca()
     ax.spines['top'].set_visible(True)
     ax.spines['right'].set_visible(True)
-
-    # Force exact x-axis limits - no padding
-    ax = plt.gca()
-    ax.set_xlim(ax.get_xlim()[0], ax.get_xlim()[1])
     
+    # Force exact x-axis limits - no padding
+    ax.set_xlim(ris_elements[0], ris_elements[-1])
+
     plt.tight_layout()
     plt.savefig(f"{plots_dir}/fig4_secrecy_vs_ris_elements.png", dpi=300, bbox_inches='tight')
     plt.close()
@@ -436,11 +441,10 @@ def plot_secrecy_vs_power():
     ax = plt.gca()
     ax.spines['top'].set_visible(True)
     ax.spines['right'].set_visible(True)
-
-    # Force exact x-axis limits - no padding
-    ax = plt.gca()
-    ax.set_xlim(ax.get_xlim()[0], ax.get_xlim()[1])
     
+    # Force exact x-axis limits - no padding
+    ax.set_xlim(power_dbm[0], power_dbm[-1])
+
     plt.tight_layout()
     plt.savefig(f"{plots_dir}/fig5_secrecy_vs_power.png", dpi=300, bbox_inches='tight')
     plt.close()
@@ -478,11 +482,10 @@ def plot_secrecy_vs_beta():
     ax = plt.gca()
     ax.spines['top'].set_visible(True)
     ax.spines['right'].set_visible(True)
-
-    # Force exact x-axis limits - no padding
-    ax = plt.gca()
-    ax.set_xlim(ax.get_xlim()[0], ax.get_xlim()[1])
     
+    # Force exact x-axis limits - no padding
+    ax.set_xlim(beta_range[0], beta_range[-1])
+
     plt.tight_layout()
     plt.savefig(f"{plots_dir}/fig6_secrecy_vs_beta.png", dpi=300, bbox_inches='tight')
     plt.close()
@@ -492,7 +495,8 @@ def plot_secrecy_vs_beta():
 def plot_secrecy_vs_bandwidth():
     print("Creating Figure 7: Secrecy Rate vs Bandwidth (VU=2 vs 10; add realism; 6 lines; no title)")
 
-    plt.figure(figsize=(12, 8))
+    plt.figure(figsize=(8, 8))
+    plt.rcParams.update({'font.size': 14})
 
     bw = np.arange(100, 1001, 50)
 
@@ -519,11 +523,10 @@ def plot_secrecy_vs_bandwidth():
     ax = plt.gca()
     ax.spines['top'].set_visible(True)
     ax.spines['right'].set_visible(True)
-
-    # Force exact x-axis limits - no padding
-    ax = plt.gca()
-    ax.set_xlim(ax.get_xlim()[0], ax.get_xlim()[1])
     
+    # Force exact x-axis limits - no padding
+    ax.set_xlim(bw[0], bw[-1])
+
     plt.tight_layout()
     plt.savefig(f"{plots_dir}/fig7_secrecy_vs_bandwidth.png", dpi=300, bbox_inches='tight')
     plt.close()
@@ -561,11 +564,10 @@ def plot_secrecy_vs_antennas():
     ax = plt.gca()
     ax.spines['top'].set_visible(True)
     ax.spines['right'].set_visible(True)
-
-    # Force exact x-axis limits - no padding
-    ax = plt.gca()
-    ax.set_xlim(ax.get_xlim()[0], ax.get_xlim()[1])
     
+    # Force exact x-axis limits - no padding
+    ax.set_xlim(ants[0], ants[-1])
+
     plt.tight_layout()
     plt.savefig(f"{plots_dir}/fig8_secrecy_vs_antennas.png", dpi=300, bbox_inches='tight')
     plt.close()
@@ -591,7 +593,7 @@ def plot_secrecy_rate_convergence():
     
     plt.xlabel('Episodes', fontsize=14)
     plt.ylabel('Joint Secrecy Rate (bps/Hz)', fontsize=14)
-    plt.legend(fontsize=14)
+    plt.legend(fontsize=12)
     plt.grid(True, alpha=0.3)
     
     # MATLAB-style appearance
@@ -600,8 +602,7 @@ def plot_secrecy_rate_convergence():
     ax.spines['right'].set_visible(True)
     
     # Force exact x-axis limits - no padding
-    ax = plt.gca()
-    ax.set_xlim(ax.get_xlim()[0], ax.get_xlim()[1])
+    ax.set_xlim(episodes[0], episodes[-1])
     
     plt.tight_layout()
     plt.savefig(f"{plots_dir}/main_secrecy_rate_convergence.png", dpi=300, bbox_inches='tight')
