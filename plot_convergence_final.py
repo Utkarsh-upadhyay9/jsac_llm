@@ -40,6 +40,10 @@ def plot_comparison(save_path='plots/actor_comparison.png'):
     ax.spines['top'].set_visible(True)
     ax.spines['right'].set_visible(True)
     
+    # Remove gaps between lines and axes - make lines touch axis boundaries
+    ax.margins(x=0, y=0)
+    ax.autoscale(tight=True)
+    
     plt.tight_layout()
     # Ensure output directory exists
     os.makedirs(os.path.dirname(save_path) or '.', exist_ok=True)
