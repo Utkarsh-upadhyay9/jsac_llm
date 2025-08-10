@@ -91,7 +91,7 @@ for ris_type in ris_types:
 print("Generated realistic secrecy rate curves based on actual DDPG training results")
 
 # Plot Figure 4 - Secrecy Rate vs RIS Elements (FIXED)
-plt.figure(figsize=(12, 8))
+plt.figure(figsize=(10, 10))
 
 for ris_name, data in results_fig4.items():
     config = data['config']

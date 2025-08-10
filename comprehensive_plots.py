@@ -12,11 +12,11 @@ matplotlib.use('Agg')  # Use non-GUI backend for headless execution
 
 # Global font configuration
 plt.rcParams.update({
-    'font.size': 20,
-    'axes.labelsize': 20,
-    'xtick.labelsize': 20,
-    'ytick.labelsize': 20,
-    'legend.fontsize': 20
+    'font.size': 18,
+    'axes.labelsize': 18,
+    'xtick.labelsize': 18,
+    'ytick.labelsize': 18,
+    'legend.fontsize': 18
 })
 
 import torch
@@ -117,7 +117,7 @@ def _sync_dual_ylim(ax_left, ax_right, arrays_left, arrays_right, pad=0.0):  # p
 def plot_convergence_antennas_power():
     print("Creating Figure 1: Convergence vs Episodes (Antennas/Power) - 6 lines, no title")
     
-    plt.figure(figsize=(8, 8))
+    plt.figure(figsize=(10, 10))
     
     episodes = np.arange(1, 101)
     
@@ -139,10 +139,10 @@ def plot_convergence_antennas_power():
     plt.plot(episodes, hybrid_dam, 'g-', label='DAM Hybrid', linewidth=2.0)
     plt.plot(episodes, hybrid_no_dam, 'g--', label='w/o DAM Hybrid', linewidth=2.0)
     
-    plt.xlabel('Episodes', fontsize=20)
-    plt.ylabel('Joint Secrecy Rate', fontsize=20)
+    plt.xlabel('Episodes', fontsize=18)
+    plt.ylabel('Joint Secrecy Rate', fontsize=18)
     # No title per request
-    plt.legend(fontsize=20, ncol=2)
+    plt.legend(fontsize=18, ncol=2)
     plt.grid(True, alpha=0.3)
     plt.xlim(episodes.min(), episodes.max())
     ax = plt.gca()
@@ -160,8 +160,8 @@ def plot_convergence_antennas_power():
     ax.set_ylim(y_min, y_max)
     ax.margins(x=0, y=0)
     ax.autoscale(tight=True)
-    
-    plt.tight_layout()
+
+    plt.subplots_adjust(left=0.15, bottom=0.15, right=0.95, top=0.95)
     plt.savefig(f"{plots_dir}/fig1_convergence_antennas_power.png", dpi=300, bbox_inches='tight')
     plt.close()
     print("✓ Figure 1 saved")
@@ -170,16 +170,17 @@ def plot_convergence_antennas_power():
 def plot_rewards_vs_vus():
     print("Creating Figure 2: Rewards vs VUs (dual y-axes; side color-coded ω=0 blue, ω=1 red; decluttered; no title)")
     
-    fig, ax_left = plt.subplots(figsize=(8, 8))
+    fig, ax_left = plt.subplots(figsize=(10, 10))
     ax_right = ax_left.twinx()
     
     vu_range = np.arange(1, 13)
 
-    # Side colors and shades
-    color_w0_axis = '#1f77b4'  # blue
-    color_w1_axis = '#d62728'  # red
-    shades_w0 = {'MLP': '#1f77b4', 'LLM': '#4fa3d1', 'Hybrid': '#0b4f8a'}
-    shades_w1 = {'MLP': '#d62728', 'LLM': '#ff6b6b', 'Hybrid': '#8c1c13'}
+    # Use same colors as other figures but distinguish left/right with line styles
+    colors = {'MLP': '#1f77b4', 'LLM': '#2ca02c', 'Hybrid': '#d62728'}  # Blue, Green, Red
+    
+    # Axis colors for left (sensing) and right (communication)
+    color_w0_axis = '#333333'  # Dark gray for sensing
+    color_w1_axis = '#666666'  # Medium gray for communication
 
     markers_l = {'MLP': 'o', 'LLM': 's', 'Hybrid': '^'}
     markers_r = {'MLP': 'o', 'LLM': 's', 'Hybrid': '^'}
@@ -205,15 +206,20 @@ def plot_rewards_vs_vus():
     sensing = _ensure_superior(sensing, 'Hybrid', margin=0.02)
     comm = _ensure_superior(comm, 'Hybrid', margin=0.01)
 
-    # Plot with offsets
+    # Plot with offsets and different line styles to distinguish left/right
     for alg in ['MLP', 'LLM', 'Hybrid']:
         x = vu_range + offsets[alg]
-        ax_left.plot(x, sensing[alg], color=shades_w0[alg], marker=markers_l[alg], linestyle='-', linewidth=2.0, markersize=msize, label=f'ω=0 {alg}')
-        ax_right.plot(x, comm[alg], color=shades_w1[alg], marker=markers_r[alg], linestyle='--', linewidth=2.0, markersize=msize, label=f'ω=1 {alg}')
+        color = colors[alg]
+        # Left axis (sensing): solid lines
+        ax_left.plot(x, sensing[alg], color=color, marker=markers_l[alg], linestyle='-', 
+                    linewidth=2.5, markersize=msize, label=f'ω=0 {alg}')
+        # Right axis (communication): dashed lines  
+        ax_right.plot(x, comm[alg], color=color, marker=markers_r[alg], linestyle='--', 
+                     linewidth=2.5, markersize=msize, label=f'ω=1 {alg}')
 
-    ax_left.set_xlabel('Number of Vehicular Users V', fontsize=20)
-    ax_left.set_ylabel('Sensing Secrecy Rate', fontsize=20, color=color_w0_axis)
-    ax_right.set_ylabel('Communication Secrecy Rate', fontsize=20, color=color_w1_axis)
+    ax_left.set_xlabel('Number of Vehicular Users V', fontsize=18)
+    ax_left.set_ylabel('Sensing Secrecy Rate', fontsize=18, color=color_w0_axis)
+    ax_right.set_ylabel('Communication Secrecy Rate', fontsize=18, color=color_w1_axis)
 
     # Match axis colors
     ax_left.tick_params(axis='y', colors=color_w0_axis)
@@ -243,13 +249,13 @@ def plot_rewards_vs_vus():
     # Legend fontsize 16
     lines_l, labels_l = ax_left.get_legend_handles_labels()
     lines_r, labels_r = ax_right.get_legend_handles_labels()
-    ax_left.legend(lines_l + lines_r, labels_l + labels_r, loc='upper right', fontsize=20, ncol=2)
+    ax_left.legend(lines_l + lines_r, labels_l + labels_r, loc='upper right', fontsize=18, ncol=2)
 
     # Force exact x-axis limits - no padding
     ax = plt.gca()
     ax.set_xlim(ax.get_xlim()[0], ax.get_xlim()[1])
     
-    plt.tight_layout()
+    plt.subplots_adjust(left=0.15, bottom=0.15, right=0.85, top=0.95)
     plt.savefig(f"{plots_dir}/fig2_rewards_vs_vus.png", dpi=300, bbox_inches='tight')
     plt.close()
     print("✓ Figure 2 saved")
@@ -257,15 +263,18 @@ def plot_rewards_vs_vus():
 # --- Figure 3: Rewards vs Sensing Targets ---
 def plot_rewards_vs_targets():
     print("Creating Figure 3: Rewards vs Sensing Targets (data-driven trends)")
-    fig, ax_left = plt.subplots(figsize=(8, 8))
+    fig, ax_left = plt.subplots(figsize=(10, 10))
     ax_right = ax_left.twinx()
 
     targets = np.array([1, 2, 3, 4, 5])
 
-    color_w0_axis = '#1f77b4'
-    color_w1_axis = '#d62728'
-    shades_w0 = {'MLP': '#1f77b4', 'LLM': '#4fa3d1', 'Hybrid': '#0b4f8a'}
-    shades_w1 = {'MLP': '#d62728', 'LLM': '#ff6b6b', 'Hybrid': '#8c1c13'}
+    # Use same colors as other figures but distinguish left/right with line styles
+    colors = {'MLP': '#1f77b4', 'LLM': '#2ca02c', 'Hybrid': '#d62728'}  # Blue, Green, Red
+    
+    # Axis colors for left (sensing) and right (communication)
+    color_w0_axis = '#333333'  # Dark gray for sensing
+    color_w1_axis = '#666666'  # Medium gray for communication
+    
     markers = {'MLP': 'o', 'LLM': 's', 'Hybrid': '^'}
     msize = 8
 
@@ -332,16 +341,21 @@ def plot_rewards_vs_targets():
     comm = _ensure_superior(comm, 'Hybrid', margin=0.02)
 
     for alg in ['MLP', 'LLM', 'Hybrid']:
-        ax_left.plot(targets, sensing[alg], color=shades_w0[alg], marker=markers[alg], linestyle='-', linewidth=2.5, markersize=msize, label=f'ω=0 {alg}')
-        ax_right.plot(targets, comm[alg], color=shades_w1[alg], marker=markers[alg], linestyle='--', linewidth=2.5, markersize=msize, label=f'ω=1 {alg}')
+        color = colors[alg]
+        # Left axis (sensing): solid lines
+        ax_left.plot(targets, sensing[alg], color=color, marker=markers[alg], linestyle='-', 
+                    linewidth=2.5, markersize=msize, label=f'ω=0 {alg}')
+        # Right axis (communication): dashed lines
+        ax_right.plot(targets, comm[alg], color=color, marker=markers[alg], linestyle='--', 
+                     linewidth=2.5, markersize=msize, label=f'ω=1 {alg}')
 
-    ax_left.set_xlabel('Number of Sensing Targets G', fontsize=20)
-    ax_left.set_ylabel('Sensing Secrecy Rate', fontsize=20, color=color_w0_axis)
-    ax_right.set_ylabel('Communication Secrecy Rate', fontsize=20, color=color_w1_axis)
+    ax_left.set_xlabel('Number of Sensing Targets G', fontsize=18)
+    ax_left.set_ylabel('Sensing Secrecy Rate', fontsize=18, color=color_w0_axis)
+    ax_right.set_ylabel('Communication Secrecy Rate', fontsize=18, color=color_w1_axis)
 
-    ax_left.tick_params(axis='y', colors=color_w0_axis, labelsize=20)
-    ax_right.tick_params(axis='y', colors=color_w1_axis, labelsize=20)
-    ax_left.tick_params(axis='x', labelsize=20)
+    ax_left.tick_params(axis='y', colors=color_w0_axis, labelsize=18)
+    ax_right.tick_params(axis='y', colors=color_w1_axis, labelsize=18)
+    ax_left.tick_params(axis='x', labelsize=18)
     ax_left.spines['left'].set_color(color_w0_axis)
     ax_right.spines['right'].set_color(color_w1_axis)
 
@@ -363,13 +377,13 @@ def plot_rewards_vs_targets():
     ax_left.spines['top'].set_visible(True)
     ax_right.spines['top'].set_visible(True)
 
-    # Combined legend inside plot box at bottom
+    # Combined legend inside plot box at bottom - fixed layout
     lines_l, labels_l = ax_left.get_legend_handles_labels()
     lines_r, labels_r = ax_right.get_legend_handles_labels()
-    ax_left.legend(lines_l + lines_r, labels_l + labels_r, loc='lower center', fontsize=20, ncol=3, frameon=True, 
-                   fancybox=True, shadow=True, framealpha=0.9)
+    ax_left.legend(lines_l + lines_r, labels_l + labels_r, loc='lower center', fontsize=18, ncol=2, frameon=True, 
+                   fancybox=True, shadow=True, framealpha=0.9, columnspacing=1.5)
 
-    plt.tight_layout()
+    plt.subplots_adjust(left=0.15, bottom=0.15, right=0.85, top=0.95)
     plt.savefig(f"{plots_dir}/fig3_rewards_vs_targets.png", dpi=300, bbox_inches='tight')
     plt.close()
     print("✓ Figure 3 saved (data-driven)")
@@ -378,7 +392,7 @@ def plot_rewards_vs_targets():
 # (Rolled back to previous log-growth version with origin at (4,0))
 def plot_secrecy_vs_ris_elements():
     print("Creating Figure 4: Secrecy Rate vs RIS Elements (origin at (4,0))")
-    plt.figure(figsize=(8, 8))
+    plt.figure(figsize=(10, 10))
     ris_elements = np.arange(4, 21)
 
     # With RIS constructions - adjusted for y-axis starting at 0
@@ -410,27 +424,32 @@ def plot_secrecy_vs_ris_elements():
     plt.plot(ris_elements, without_ris_data['LLM'], 'r:', linewidth=2.5, label='LLM w/o RIS')
     plt.plot(ris_elements, without_ris_data['Hybrid'], 'g:', linewidth=2.5, label='Hybrid w/o RIS')
 
-    plt.xlabel('Number of RIS Elements', fontsize=20)
-    plt.ylabel('Joint Secrecy Rate (bps/Hz)', fontsize=20)
-
-    plt.legend(fontsize=20, ncol=1, frameon=True, fancybox=True, shadow=True, framealpha=0.9, loc='upper left')
+    plt.xlabel('Number of RIS Elements', fontsize=18)
+    plt.ylabel('Joint Secrecy Rate (bps/Hz)', fontsize=18)
+    plt.legend(fontsize=18, ncol=1, frameon=True, fancybox=True, shadow=True, framealpha=0.9, loc='upper left')
     ax = plt.gca()
-    ax.tick_params(labelsize=20)
+    ax.tick_params(labelsize=18)
 
     plt.grid(True, alpha=0.3)
     ax = plt.gca()
     ax.spines['top'].set_visible(True)
     ax.spines['right'].set_visible(True)
 
-    # Set limits for coast-to-coast effect with origin at (4, 0)
+    # FORCE Y-AXIS TO START AT 0 - SET EXPLICIT LIMITS
     all_data = list(with_ris_data.values()) + list(without_ris_data.values())
     y_max = max(d.max() for d in all_data)
-    ax.set_ylim(0, y_max * 1.05)  # Y-axis starts at 0
+    ax.set_ylim(0, y_max * 1.1)  # Y-axis MUST start at 0
     ax.set_xlim(4, ris_elements[-1])  # X-axis starts at 4
+    
+    # Force the origin to be visible
+    ax.axhline(y=0, color='black', linewidth=0.5, alpha=0.3)
+    ax.axvline(x=4, color='black', linewidth=0.5, alpha=0.3)
+    
+    # No margins to ensure coast-to-coast
     ax.margins(x=0, y=0)
-    ax.autoscale(tight=True)
+    ax.autoscale(tight=False)  # Don't auto-scale to avoid changing our explicit limits
 
-    plt.tight_layout()
+    plt.subplots_adjust(left=0.15, bottom=0.15, right=0.95, top=0.95)
     plt.savefig(f"{plots_dir}/fig4_secrecy_vs_ris_elements.png", dpi=300, bbox_inches='tight')
     plt.close()
     print("✓ Figure 4 saved (rolled back version)")
@@ -439,7 +458,7 @@ def plot_secrecy_vs_ris_elements():
 def plot_secrecy_vs_power():
     print("Creating Figure 5: Secrecy Rate vs Total Power (6 lines; add realism; no title)")
 
-    plt.figure(figsize=(8, 8))
+    plt.figure(figsize=(10, 10))
 
     power_dbm = np.arange(10, 41, 2)
 
@@ -458,9 +477,9 @@ def plot_secrecy_vs_power():
     plt.plot(power_dbm, secrecy_hyb_dam, 'g-o', linewidth=2.0, label='DAM Hybrid')
     plt.plot(power_dbm, secrecy_hyb_no, 'g--s', linewidth=2.0, label='w/o DAM Hybrid')
 
-    plt.xlabel('Total Power (dBm)', fontsize=20)
-    plt.ylabel('Joint Secrecy Rate (bps/Hz)', fontsize=20)
-    plt.legend(fontsize=20, ncol=2)
+    plt.xlabel('Total Power (dBm)', fontsize=18)
+    plt.ylabel('Joint Secrecy Rate (bps/Hz)', fontsize=18)
+    plt.legend(fontsize=18, ncol=2)
     plt.grid(True, alpha=0.3)
     
     # MATLAB-style appearance
@@ -481,7 +500,7 @@ def plot_secrecy_vs_power():
     ax.margins(x=0, y=0)
     ax.autoscale(tight=True)
     
-    plt.tight_layout()
+    plt.subplots_adjust(left=0.15, bottom=0.15, right=0.95, top=0.95)
     plt.savefig(f"{plots_dir}/fig5_secrecy_vs_power.png", dpi=300, bbox_inches='tight')
     plt.close()
     print("✓ Figure 5 saved")
@@ -490,7 +509,7 @@ def plot_secrecy_vs_power():
 def plot_secrecy_vs_beta():
     print("Creating Figure 6: Secrecy Rate vs Beta (6 lines; add realism; no title)")
 
-    plt.figure(figsize=(8, 8))
+    plt.figure(figsize=(10, 10))
 
     beta_range = np.linspace(0, 1, 21)
 
@@ -508,9 +527,9 @@ def plot_secrecy_vs_beta():
     plt.plot(beta_range, secrecy_hyb_dam, 'g-o', linewidth=2.0, label='DAM Hybrid')
     plt.plot(beta_range, secrecy_hyb_no, 'g--s', linewidth=2.0, label='w/o DAM Hybrid')
 
-    plt.xlabel('Beta (β)', fontsize=20)
-    plt.ylabel('Joint Secrecy Rate (bps/Hz)', fontsize=20)
-    plt.legend(fontsize=20, ncol=2)
+    plt.xlabel(r'$\beta$', fontsize=18)
+    plt.ylabel('Joint Secrecy Rate (bps/Hz)', fontsize=18)
+    plt.legend(fontsize=18, ncol=2)
     plt.grid(True, alpha=0.3)
     
     # MATLAB-style appearance
@@ -531,7 +550,7 @@ def plot_secrecy_vs_beta():
     ax.margins(x=0, y=0)
     ax.autoscale(tight=True)
     
-    plt.tight_layout()
+    plt.subplots_adjust(left=0.15, bottom=0.15, right=0.95, top=0.95)
     plt.savefig(f"{plots_dir}/fig6_secrecy_vs_beta.png", dpi=300, bbox_inches='tight')
     plt.close()
     print("✓ Figure 6 saved")
@@ -539,7 +558,7 @@ def plot_secrecy_vs_beta():
 # --- Figure 7: Secrecy Rate vs Bandwidth ---
 def plot_secrecy_vs_bandwidth():
     print("Creating Figure 7: Secrecy Rate vs Bandwidth (VU=2 vs 10; add realism; 6 lines; no title)")
-    plt.figure(figsize=(8, 8))  # ensure square
+    plt.figure(figsize=(10, 10))  # ensure square
 
     bw = np.arange(100, 1001, 50)
 
@@ -557,9 +576,9 @@ def plot_secrecy_vs_bandwidth():
     plt.plot(bw, vu2_hyb, 'g-o', linewidth=2.0, label='VU=2 Hybrid')
     plt.plot(bw, vu10_hyb, 'g--s', linewidth=2.0, label='VU=10 Hybrid')
 
-    plt.xlabel('Bandwidth (MHz)', fontsize=20)
-    plt.ylabel('Joint Secrecy Rate (bps/Hz)', fontsize=20)
-    plt.legend(fontsize=20, ncol=2)
+    plt.xlabel('Bandwidth (MHz)', fontsize=18)
+    plt.ylabel('Joint Secrecy Rate (bps/Hz)', fontsize=18)
+    plt.legend(fontsize=18, ncol=2)
     plt.grid(True, alpha=0.3)
     
     # MATLAB-style appearance
@@ -580,7 +599,7 @@ def plot_secrecy_vs_bandwidth():
     ax.margins(x=0, y=0)
     ax.autoscale(tight=True)
     
-    plt.tight_layout()
+    plt.subplots_adjust(left=0.15, bottom=0.15, right=0.95, top=0.95)
     plt.savefig(f"{plots_dir}/fig7_secrecy_vs_bandwidth.png", dpi=300, bbox_inches='tight')
     plt.close()
     print("✓ Figure 7 saved")
@@ -589,7 +608,7 @@ def plot_secrecy_vs_bandwidth():
 def plot_secrecy_vs_antennas():
     print("Creating Figure 8: Secrecy Rate vs BS Antennas (VU=2 vs 10; add realism; 6 lines; no title)")
 
-    plt.figure(figsize=(8, 8))
+    plt.figure(figsize=(10, 10))
     plt.rcParams.update({'font.size': 14})
 
     ants = np.arange(8, 65, 4)
@@ -608,9 +627,9 @@ def plot_secrecy_vs_antennas():
     plt.plot(ants, vu2_hyb, 'g-o', linewidth=2.0, label='VU=2 Hybrid')
     plt.plot(ants, vu10_hyb, 'g--s', linewidth=2.0, label='VU=10 Hybrid')
 
-    plt.xlabel('Number of BS Antennas', fontsize=20)
-    plt.ylabel('Joint Secrecy Rate (bps/Hz)', fontsize=20)
-    plt.legend(fontsize=20, ncol=2)
+    plt.xlabel('Number of BS Antennas', fontsize=18)
+    plt.ylabel('Joint Secrecy Rate (bps/Hz)', fontsize=18)
+    plt.legend(fontsize=18, ncol=2)
     plt.grid(True, alpha=0.3)
     
     # MATLAB-style appearance
@@ -631,7 +650,7 @@ def plot_secrecy_vs_antennas():
     ax.margins(x=0, y=0)
     ax.autoscale(tight=True)
     
-    plt.tight_layout()
+    plt.subplots_adjust(left=0.15, bottom=0.15, right=0.95, top=0.95)
     plt.savefig(f"{plots_dir}/fig8_secrecy_vs_antennas.png", dpi=300, bbox_inches='tight')
     plt.close()
     print("✓ Figure 8 saved")
@@ -640,7 +659,7 @@ def plot_secrecy_vs_antennas():
 def plot_secrecy_rate_convergence():
     print("Creating Main Plot: Secrecy Rate vs Episodes")
     
-    plt.figure(figsize=(8, 8))
+    plt.figure(figsize=(10, 10))
     
     episodes = np.arange(1, 201)
     
@@ -653,9 +672,9 @@ def plot_secrecy_rate_convergence():
     plt.plot(episodes, llm_secrecy, 'r--', label='LLM Actor', linewidth=2)
     plt.plot(episodes, hybrid_secrecy, 'g-.', label='Hybrid Actor', linewidth=2)
     
-    plt.xlabel('Episodes', fontsize=20)
-    plt.ylabel('Joint Secrecy Rate (bps/Hz)', fontsize=20)
-    plt.legend(fontsize=20)
+    plt.xlabel('Episodes', fontsize=18)
+    plt.ylabel('Joint Secrecy Rate (bps/Hz)', fontsize=18)
+    plt.legend(fontsize=18)
     plt.grid(True, alpha=0.3)
     
     # MATLAB-style appearance
@@ -676,7 +695,7 @@ def plot_secrecy_rate_convergence():
     ax.margins(x=0, y=0)
     ax.autoscale(tight=True)
     
-    plt.tight_layout()
+    plt.subplots_adjust(left=0.15, bottom=0.15, right=0.95, top=0.95)
     plt.savefig(f"{plots_dir}/main_secrecy_rate_convergence.png", dpi=300, bbox_inches='tight')
     plt.close()
     print("✓ Main secrecy rate plot saved")

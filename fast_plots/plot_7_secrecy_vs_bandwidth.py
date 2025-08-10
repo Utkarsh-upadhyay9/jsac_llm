@@ -60,7 +60,8 @@ for B_val in bandwidth_values:
 print("Generated synthetic bandwidth parameter sweep data")
 
 # Plot Figure 7
-plt.figure(figsize=(12, 8))
+plt.figure(figsize=(10, 10))
+plt.rcParams.update({'font.size': 18})
 
 colors = ['#1f77b4', '#2ca02c', '#d62728']  # Blue, Green, Red
 
@@ -76,12 +77,22 @@ for algo_name, color in zip(['MLP', 'LLM', 'Hybrid'], colors):
     plt.plot(bandwidth_values, secrecy_rates, color=color, marker='o', 
             label=f'DDPG-{algo_name}', linewidth=2.5, markersize=8)
 
-plt.xlabel('Bandwidth (GHz)', fontsize=12)
-plt.ylabel('Secrecy Rate (bits/s/Hz)', fontsize=12)
-plt.legend(fontsize=12)
+plt.xlabel('Bandwidth (GHz)', fontsize=18)
+plt.ylabel('Joint Secrecy Rate (bps/Hz)', fontsize=18)
+plt.legend(fontsize=18)
 plt.grid(True, alpha=0.3)
 
-plt.tight_layout()
+# MATLAB-style appearance
+ax = plt.gca()
+ax.spines['top'].set_visible(True)
+ax.spines['right'].set_visible(True)
+ax.tick_params(labelsize=18)
+
+# Coast-to-coast axis flushing
+ax.margins(x=0, y=0)
+ax.autoscale(tight=True)
+
+plt.subplots_adjust(left=0.15, bottom=0.15, right=0.95, top=0.95)
 plt.savefig('plots/figure_7_secrecy_vs_bandwidth_fast.png', dpi=300, bbox_inches='tight')
 plt.close()
 

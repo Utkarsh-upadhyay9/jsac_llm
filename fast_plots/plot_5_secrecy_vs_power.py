@@ -119,7 +119,7 @@ for ris_type in ris_types:
 print("Generated secrecy rate vs total power data based on actual DDPG training results")
 
 # Plot Figure 5 - Secrecy Rate vs Total Power (matches paper Figure 2c)
-plt.figure(figsize=(10, 8))
+plt.figure(figsize=(10, 10))
 
 for ris_name, data in results_fig5.items():
     config = data['config']

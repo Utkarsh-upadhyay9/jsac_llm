@@ -37,7 +37,7 @@ agents = [
 print("Generating convergence comparison for 3 agents")
 
 # Plot Figure 1 - Agent Convergence Comparison
-plt.figure(figsize=(12, 8))
+plt.figure(figsize=(10, 10))
 
 # Plot convergence curves for each agent
 for agent in agents:
