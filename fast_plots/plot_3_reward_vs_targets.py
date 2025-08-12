@@ -105,9 +105,9 @@ for algo_name, color in zip(['MLP', 'LLM', 'Hybrid'], colors):
     ax1.plot(target_range, rewards, color=color, marker='o', 
             label=f'{algo_name}', linewidth=2.5, markersize=8)
 
-ax1.set_xlabel('Number of Sensing Targets', fontsize=12)
-ax1.set_ylabel('Reward (ω=0)', fontsize=12)
-ax1.legend(fontsize=10)
+ax1.set_xlabel('Number of Sensing Targets', fontsize=18)
+ax1.set_ylabel('Reward (ω=0)', fontsize=18)
+ax1.legend(fontsize=18)
 ax1.grid(True, alpha=0.3)
 
 # Graph 2: ω=1 (Communication Only)
@@ -124,9 +124,9 @@ for algo_name, color in zip(['MLP', 'LLM', 'Hybrid'], colors):
     ax2.plot(target_range, rewards, color=color, marker='s', 
             label=f'{algo_name}', linewidth=2.5, markersize=8)
 
-ax2.set_xlabel('Number of Sensing Targets', fontsize=12)
-ax2.set_ylabel('Reward (ω=1)', fontsize=12)
-ax2.legend(fontsize=10)
+ax2.set_xlabel('Number of Sensing Targets', fontsize=18)
+ax2.set_ylabel('Reward (ω=1)', fontsize=18)
+ax2.legend(fontsize=18)
 ax2.grid(True, alpha=0.3)
 
 plt.tight_layout()

@@ -132,9 +132,9 @@ for ris_name, data in results_fig5.items():
             linewidth=2.5, 
             markersize=8)
 
-plt.xlabel('Total power(dBm)', fontsize=12)
-plt.ylabel('Secrecy rate(bps/Hz)', fontsize=12)
-plt.legend(fontsize=10)
+plt.xlabel('Total power(dBm)', fontsize=18)
+plt.ylabel('Secrecy rate(bps/Hz)', fontsize=18)
+plt.legend(fontsize=18)
 plt.grid(True, alpha=0.3)
 plt.xlim(16, 30)  # Match power range
 plt.ylim(5, 14)   # Adjust y-axis for honest representation

@@ -112,9 +112,9 @@ for ris_name, data in results_fig4.items():
                 markersize=9,
                 alpha=0.9)
 
-plt.xlabel('Number of RIS elements(N)', fontsize=14)
-plt.ylabel('Secrecy rate(bps/Hz)', fontsize=14)
-plt.legend(fontsize=12, loc='lower right')
+plt.xlabel('Number of RIS elements(N)', fontsize=18)
+plt.ylabel('Secrecy rate(bps/Hz)', fontsize=18)
+plt.legend(fontsize=18, loc='lower right')
 plt.grid(True, alpha=0.4)
 plt.xlim(10, 100)  # Match paper x-axis
 plt.ylim(3, 13)    # Match paper y-axis range

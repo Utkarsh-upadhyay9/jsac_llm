@@ -75,9 +75,9 @@ for agent in agents:
              markersize=8,
              markevery=len(secrecy_rate)//10)  # Show markers every 10% of data
 
-plt.xlabel('Number of iterations', fontsize=12)
-plt.ylabel('Secrecy rate(bps/Hz)', fontsize=12)
-plt.legend(fontsize=10)
+plt.xlabel('Number of iterations', fontsize=18)
+plt.ylabel('Secrecy rate(bps/Hz)', fontsize=18)
+plt.legend(fontsize=18)
 plt.grid(True, alpha=0.3)
 plt.xlim(1, 11)  # Match paper x-axis
 plt.ylim(6, 13)  # Match paper y-axis range

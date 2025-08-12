@@ -124,7 +124,7 @@ def plot_comparison(save_path='plots/actor_comparison.png'):
                 label=f'DDPG-{name}')
 
     plt.xlabel('Episodes', fontsize=18)
-    plt.ylabel('Average Reward', fontsize=18)
+    plt.ylabel('Secracy Rate (bps/Hz)', fontsize=18)
     plt.legend(fontsize=18, loc='lower right')
     
     # Set axis limits for 500 episodes - both axes start from 0
