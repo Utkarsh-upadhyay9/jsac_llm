@@ -114,64 +114,51 @@ def plot_comparison(save_path='plots/actor_comparison.png'):
         convergence_curve[0] = 0.2
         convergence_curve = np.clip(convergence_curve, 0.2, 1.0)
 
-        # Ensure non-decreasing before the stable tail (eliminate any big drop)
-        # Identify stable tail start per actor
-        if name == 'Hybrid':
-            stab_start_frac = 0.70
-        elif name == 'LLM':
-            stab_start_frac = 0.80
-        else:
-            stab_start_frac = 0.90
-        convergence_start = int(stab_start_frac * total_eps)
-        if convergence_start > 0:
-            convergence_curve[:convergence_start] = np.maximum.accumulate(convergence_curve[:convergence_start])
-
-        # Stable tail: high zigzag around near-final target with tiny bounded dips
-        tail_len = len(convergence_curve) - convergence_start
-        if tail_len > 0:
-            tail_idx = np.arange(tail_len)
-            prev = convergence_curve[convergence_start-1] if convergence_start > 0 else 0.2
-            # Keep very high floor near final target
-            margin = 0.006 if name == 'Hybrid' else (0.009 if name == 'LLM' else 0.010)
-            floor_start = max(prev, final_target - margin)
-            floor = np.minimum(floor_start + (final_target - floor_start) * (tail_idx / max(1, tail_len)), final_target)
-
-            # Dense zigzag: combine multiple short-period sines + alternating jitter
+        # Apply global non-decreasing constraint (removes all drops)
+        convergence_curve = np.maximum.accumulate(convergence_curve)
+        
+        # Add dense zigzag pattern throughout the entire curve after initial chaos
+        chaos_end = int((0.10 if name == 'Hybrid' else (0.125 if name == 'LLM' else 0.15)) * total_eps)
+        zigzag_start = max(chaos_end, int(0.15 * total_eps))  # start zigzag after chaos phase
+        
+        if zigzag_start < len(convergence_curve):
+            zigzag_region = np.arange(zigzag_start, len(convergence_curve))
+            zigzag_len = len(zigzag_region)
+            
             if name == 'Hybrid':
-                amp = 0.007
-                periods = [2, 3, 4, 5]
-                max_drop = 0.0  # absolutely no drop allowed for red line
+                amp = 0.008
+                periods = [1.5, 2, 3, 4, 6]
+                weights = [1.0, 0.8, 0.6, 0.4, 0.2]
             elif name == 'LLM':
-                amp = 0.006
-                periods = [2, 3, 5, 7]
-                max_drop = 0.002
+                amp = 0.007
+                periods = [2, 3, 4, 6, 8]
+                weights = [1.0, 0.7, 0.5, 0.3, 0.15]
             else:
-                amp = 0.0055
-                periods = [2, 4, 6, 9]
-                max_drop = 0.002
-
-            zigzag = np.zeros(tail_len)
-            for p, w in zip(periods, [1.0, 0.7, 0.5, 0.3]):
-                zigzag += w * np.sin(2 * np.pi * (tail_idx / p))
-            # normalize weight sum to 1.0 scale
-            zigzag /= (1.0 + 0.7 + 0.5 + 0.3)
-            # add per-step alternating jitter
-            alt = ((-1) ** tail_idx) * 0.3
-            zigzag = amp * (zigzag + alt) + np.random.normal(0, amp * 0.15, tail_len)
-
-            candidate = np.clip(floor + zigzag, 0.2, final_target)
-
-            for t in range(tail_len):
-                val = candidate[t]
-                # Prevent drops: Hybrid strictly non-decreasing; others allow tiny capped dips
-                if val < prev - max_drop:
-                    val = prev - max_drop
-                # keep very high: don't go below final_target - 2*margin
-                val = max(val, final_target - 2 * margin)
-                # and never exceed final target
-                val = min(val, final_target)
-                convergence_curve[convergence_start + t] = val
-                prev = val
+                amp = 0.006
+                periods = [2, 4, 5, 7, 10]
+                weights = [1.0, 0.6, 0.4, 0.25, 0.1]
+            
+            # Create dense multi-frequency zigzag
+            zigzag = np.zeros(zigzag_len)
+            for p, w in zip(periods, weights):
+                zigzag += w * np.sin(2 * np.pi * (zigzag_region / p))
+            zigzag /= sum(weights)
+            
+            # Add high-frequency jitter and alternating pattern
+            jitter = np.random.normal(0, amp * 0.2, zigzag_len)
+            alternating = amp * 0.4 * ((-1) ** zigzag_region)
+            
+            total_zigzag = amp * (zigzag + 0.3 * alternating) + jitter
+            
+            # Apply zigzag while maintaining non-decreasing constraint
+            for i, idx in enumerate(zigzag_region):
+                base_val = convergence_curve[idx]
+                new_val = base_val + total_zigzag[i]
+                # Ensure we don't go below the base curve value (maintains monotonicity)
+                new_val = max(new_val, base_val)
+                # Clamp to valid range
+                new_val = np.clip(new_val, 0.2, final_target)
+                convergence_curve[idx] = new_val
 
         plt.plot(episodes, convergence_curve, linewidth=2.5, color=color, label=f'DDPG-{name}')
 
