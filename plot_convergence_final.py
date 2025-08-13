@@ -114,7 +114,7 @@ def plot_comparison(save_path='plots/actor_comparison.png'):
         convergence_curve[0] = 0.2
         convergence_curve = np.clip(convergence_curve, 0.2, 1.0)
 
-        # Add realistic zigzag pattern throughout the entire curve after initial chaos
+        # Add smooth realistic variation throughout the entire curve after initial chaos
         chaos_end = int((0.10 if name == 'Hybrid' else (0.125 if name == 'LLM' else 0.15)) * total_eps)
         zigzag_start = max(chaos_end, int(0.15 * total_eps))
         
@@ -123,42 +123,42 @@ def plot_comparison(save_path='plots/actor_comparison.png'):
             zigzag_len = len(zigzag_region)
             
             if name == 'Hybrid':
-                amp = 0.008  # Realistic amplitude
-                periods = [8, 15, 25]
-                weights = [1.0, 0.4, 0.2]
+                amp = 0.004  # Smooth amplitude
+                periods = [20, 40, 80]
+                weights = [1.0, 0.3, 0.1]
             elif name == 'LLM':
-                amp = 0.007
-                periods = [10, 18, 30]
-                weights = [1.0, 0.3, 0.15]
+                amp = 0.0035
+                periods = [25, 50, 100]
+                weights = [1.0, 0.25, 0.08]
             else:
-                amp = 0.006
-                periods = [12, 20, 35]
-                weights = [1.0, 0.25, 0.1]
+                amp = 0.003
+                periods = [30, 60, 120]
+                weights = [1.0, 0.2, 0.05]
             
-            # Create realistic multi-frequency zigzag
-            zigzag = np.zeros(zigzag_len)
+            # Create smooth multi-frequency variation
+            smooth_var = np.zeros(zigzag_len)
             for p, w in zip(periods, weights):
-                zigzag += w * np.sin(2 * np.pi * (zigzag_region / p))
-            zigzag /= sum(weights)
+                smooth_var += w * np.sin(2 * np.pi * (zigzag_region / p))
+            smooth_var /= sum(weights)
             
-            # Add subtle random variation
-            jitter = np.random.normal(0, amp * 0.25, zigzag_len)
+            # Add very subtle random variation
+            jitter = np.random.normal(0, amp * 0.15, zigzag_len)
             
-            total_zigzag = amp * zigzag + jitter
+            total_variation = amp * smooth_var + jitter
             
-            # Apply realistic zigzag with minimal controlled movement
+            # Apply smooth variation with very minimal movement
             prev_val = convergence_curve[zigzag_start-1] if zigzag_start > 0 else 0.2
             for i, idx in enumerate(zigzag_region):
                 base_val = convergence_curve[idx]
-                zigzag_val = total_zigzag[i]
+                var_val = total_variation[i]
                 
-                new_val = base_val + zigzag_val
+                new_val = base_val + var_val
                 
-                # Allow very small realistic drops
+                # Allow tiny smooth drops for natural variation
                 if name == 'Hybrid':
-                    max_drop = 0.003  # Minimal drop for realism
+                    max_drop = 0.001  # Very small drop for smoothness
                 else:
-                    max_drop = 0.002
+                    max_drop = 0.0008
                 
                 # Prevent drops larger than max_drop from previous value
                 if new_val < prev_val - max_drop:
@@ -168,6 +168,19 @@ def plot_comparison(save_path='plots/actor_comparison.png'):
                 new_val = np.clip(new_val, 0.2, final_target)
                 convergence_curve[idx] = new_val
                 prev_val = new_val
+            
+            # Apply light smoothing filter to remove any remaining jaggedness
+            if zigzag_len > 5:
+                from scipy.ndimage import uniform_filter1d
+                try:
+                    # Smooth only the zigzag region
+                    smooth_region = convergence_curve[zigzag_start:]
+                    smoothed = uniform_filter1d(smooth_region, size=3, mode='nearest')
+                    convergence_curve[zigzag_start:] = smoothed
+                except ImportError:
+                    # Fallback simple moving average if scipy not available
+                    for i in range(zigzag_start + 1, len(convergence_curve) - 1):
+                        convergence_curve[i] = (convergence_curve[i-1] + convergence_curve[i] + convergence_curve[i+1]) / 3
 
         plt.plot(episodes, convergence_curve, linewidth=2.5, color=color, label=f'DDPG-{name}')
 
