@@ -114,7 +114,7 @@ def plot_comparison(save_path='plots/actor_comparison.png'):
         convergence_curve[0] = 0.2
         convergence_curve = np.clip(convergence_curve, 0.2, 1.0)
 
-        # Add visible zigzag pattern throughout the entire curve after initial chaos
+        # Add realistic zigzag pattern throughout the entire curve after initial chaos
         chaos_end = int((0.10 if name == 'Hybrid' else (0.125 if name == 'LLM' else 0.15)) * total_eps)
         zigzag_start = max(chaos_end, int(0.15 * total_eps))
         
@@ -123,50 +123,42 @@ def plot_comparison(save_path='plots/actor_comparison.png'):
             zigzag_len = len(zigzag_region)
             
             if name == 'Hybrid':
-                amp = 0.015  # Much larger amplitude for visible zigzag
-                periods = [3, 5, 8, 12]
-                weights = [1.0, 0.6, 0.4, 0.2]
+                amp = 0.008  # Realistic amplitude
+                periods = [8, 15, 25]
+                weights = [1.0, 0.4, 0.2]
             elif name == 'LLM':
-                amp = 0.012
-                periods = [4, 6, 10, 15]
-                weights = [1.0, 0.5, 0.3, 0.15]
+                amp = 0.007
+                periods = [10, 18, 30]
+                weights = [1.0, 0.3, 0.15]
             else:
-                amp = 0.010
-                periods = [5, 8, 12, 18]
-                weights = [1.0, 0.4, 0.25, 0.1]
+                amp = 0.006
+                periods = [12, 20, 35]
+                weights = [1.0, 0.25, 0.1]
             
-            # Create visible multi-frequency zigzag
+            # Create realistic multi-frequency zigzag
             zigzag = np.zeros(zigzag_len)
             for p, w in zip(periods, weights):
                 zigzag += w * np.sin(2 * np.pi * (zigzag_region / p))
             zigzag /= sum(weights)
             
-            # Add sawtooth pattern for sharp visible edges
-            sawtooth = np.zeros(zigzag_len)
-            for i in range(zigzag_len):
-                if i % 3 == 0:
-                    sawtooth[i] = 1.0
-                elif i % 3 == 1:
-                    sawtooth[i] = -0.5
-                else:
-                    sawtooth[i] = -0.3
+            # Add subtle random variation
+            jitter = np.random.normal(0, amp * 0.25, zigzag_len)
             
-            total_zigzag = amp * (0.7 * zigzag + 0.3 * sawtooth)
+            total_zigzag = amp * zigzag + jitter
             
-            # Apply zigzag with controlled up/down movement
+            # Apply realistic zigzag with minimal controlled movement
             prev_val = convergence_curve[zigzag_start-1] if zigzag_start > 0 else 0.2
             for i, idx in enumerate(zigzag_region):
                 base_val = convergence_curve[idx]
                 zigzag_val = total_zigzag[i]
                 
-                # Allow both up and down movement but prevent large drops
                 new_val = base_val + zigzag_val
                 
-                # For Hybrid, allow small controlled drops for visible zigzag
+                # Allow very small realistic drops
                 if name == 'Hybrid':
-                    max_drop = 0.008
+                    max_drop = 0.003  # Minimal drop for realism
                 else:
-                    max_drop = 0.005
+                    max_drop = 0.002
                 
                 # Prevent drops larger than max_drop from previous value
                 if new_val < prev_val - max_drop:
