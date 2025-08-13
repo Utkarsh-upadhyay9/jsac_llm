@@ -74,15 +74,15 @@ def plot_comparison(save_path='plots/actor_comparison.png'):
         # Base logistic rise towards high final target
         convergence_curve = final_target / (1 + np.exp(-speed * (episodes - midpoint)))
 
-        # Noise profile and chaos window
+        # Noise profile and chaos window - reduced for smoother start
         if name == 'Hybrid':
-            noise_base = 0.07
+            noise_base = 0.05  # Reduced from 0.07
             chaos_end_frac = 0.10
         elif name == 'LLM':
-            noise_base = 0.06
+            noise_base = 0.04  # Reduced from 0.06
             chaos_end_frac = 0.125
         else:
-            noise_base = 0.05
+            noise_base = 0.035  # Reduced from 0.05
             chaos_end_frac = 0.15
         noise_scale = noise_base * np.exp(-episodes / (total_eps / 2.5))
         chaos_episodes = episodes < int(chaos_end_frac * total_eps)
@@ -92,20 +92,20 @@ def plot_comparison(save_path='plots/actor_comparison.png'):
 
         extra_chaos = np.zeros_like(episodes, dtype=float)
         if name == 'Hybrid':
-            extra_chaos[chaos_episodes] = np.random.normal(0, 0.04, np.sum(chaos_episodes))
+            extra_chaos[chaos_episodes] = np.random.normal(0, 0.025, np.sum(chaos_episodes))  # Reduced from 0.04
         elif name == 'LLM':
-            extra_chaos[chaos_episodes] = np.random.normal(0, 0.035, np.sum(chaos_episodes))
+            extra_chaos[chaos_episodes] = np.random.normal(0, 0.022, np.sum(chaos_episodes))  # Reduced from 0.035
         else:
-            extra_chaos[chaos_episodes] = np.random.normal(0, 0.03, np.sum(chaos_episodes))
+            extra_chaos[chaos_episodes] = np.random.normal(0, 0.020, np.sum(chaos_episodes))  # Reduced from 0.03
 
-        # Recurring spikes in the first min(5% total, 200) episodes
-        spike_window = int(min(0.05 * total_eps, 200))
+        # Recurring spikes in the first episodes - reduced frequency and magnitude
+        spike_window = int(min(0.03 * total_eps, 150))  # Reduced window from 0.05 to 0.03 and max from 200 to 150
         starting_mask = episodes <= spike_window
         np.random.seed(200 + i)
         for ep in episodes[starting_mask]:
-            if ep % 8 == 0 or ep % 12 == 0:
-                spike_magnitude = (np.random.uniform(0.08, 0.15) if name == 'Hybrid' else
-                                   (np.random.uniform(0.06, 0.12) if name == 'LLM' else np.random.uniform(0.04, 0.10)))
+            if ep % 15 == 0 or ep % 20 == 0:  # Less frequent spikes (was every 8 or 12)
+                spike_magnitude = (np.random.uniform(0.04, 0.08) if name == 'Hybrid' else  # Reduced magnitude
+                                   (np.random.uniform(0.03, 0.06) if name == 'LLM' else np.random.uniform(0.025, 0.05)))
                 extra_chaos[ep] += np.random.choice([-spike_magnitude, spike_magnitude])
 
         convergence_curve += noise + extra_chaos
