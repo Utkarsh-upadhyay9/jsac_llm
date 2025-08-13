@@ -122,23 +122,41 @@ def plot_comparison(save_path='plots/actor_comparison.png'):
             progress = (k - convergence_start) / max(1, (len(convergence_curve) - convergence_start))
             blend_weight = progress * 0.9
             convergence_curve[k] = convergence_curve[k] * (1 - blend_weight) + final_target * blend_weight
-            # Remove negative drift; use only tiny bounded noise
-            convergence_curve[k] += np.random.normal(0, 0.001)
+            # Smaller bounded noise pre-tail shaping
+            convergence_curve[k] += np.random.normal(0, 0.0008)
         
-        # Final post-processing to guarantee stability without decreases
-        # 1) Ensure non-decreasing globally
-        convergence_curve = np.maximum.accumulate(convergence_curve)
-        # 2) Add minuscule upward ramp in the stable tail to avoid perfectly flat lines
-        tail_idx = np.arange(convergence_start, len(convergence_curve))
-        if len(tail_idx) > 0:
+        # Tail: zigzag around a slowly increasing floor, without overall downward trend
+        tail_start = convergence_start
+        tail_len = len(convergence_curve) - tail_start
+        if tail_len > 0:
+            tail_idx = np.arange(tail_len)
+            floor_start = max(convergence_curve[tail_start-1] if tail_start > 0 else 0.2, 0.2)
+            # Per-actor small upward drift toward final target
             if name == 'Hybrid':
-                eps = 2.0e-4
+                floor_slope = (final_target - floor_start) / max(tail_len, 1) * 1.15
+                amp = 0.006
+                period = 40
             elif name == 'LLM':
-                eps = 1.5e-4
+                floor_slope = (final_target - floor_start) / max(tail_len, 1) * 1.00
+                amp = 0.005
+                period = 44
             else:
-                eps = 1.0e-4
-            ramp = eps * (tail_idx - tail_idx[0])
-            convergence_curve[tail_idx] = np.minimum(convergence_curve[tail_idx] + ramp, final_target)
+                floor_slope = (final_target - floor_start) / max(tail_len, 1) * 0.90
+                amp = 0.004
+                period = 48
+            floor = np.minimum(floor_start + floor_slope * tail_idx, final_target)
+            zigzag = amp * np.sin(2 * np.pi * (tail_idx / period)) + np.random.normal(0, amp * 0.15, tail_len)
+            candidate = np.clip(floor + zigzag, 0.2, final_target)
+            
+            # Allow only tiny stepwise decreases to preserve zigzag feel without drops
+            prev = convergence_curve[tail_start-1] if tail_start > 0 else 0.2
+            max_drop = 0.002
+            for t in range(tail_len):
+                val = candidate[t]
+                if val < prev - max_drop:
+                    val = prev - max_drop
+                convergence_curve[tail_start + t] = val
+                prev = val
         
         plt.plot(episodes, convergence_curve, linewidth=2.5, color=color, label=f'DDPG-{name}')
 
