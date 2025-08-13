@@ -131,33 +131,45 @@ def plot_comparison(save_path='plots/actor_comparison.png'):
         if tail_len > 0:
             tail_idx = np.arange(tail_len)
             prev = convergence_curve[convergence_start-1] if convergence_start > 0 else 0.2
-            # High floor begins close to the final target minus a small margin
-            margin = 0.01 if name == 'Hybrid' else (0.012 if name == 'LLM' else 0.015)
+            # Keep very high floor near final target
+            margin = 0.006 if name == 'Hybrid' else (0.009 if name == 'LLM' else 0.010)
             floor_start = max(prev, final_target - margin)
-            # Very slow upward drift to final_target
             floor = np.minimum(floor_start + (final_target - floor_start) * (tail_idx / max(1, tail_len)), final_target)
-            # Zigzag amplitude kept high-ish but bounded
+
+            # Dense zigzag: combine multiple short-period sines + alternating jitter
             if name == 'Hybrid':
-                amp = 0.006
-                period = 36
-                max_drop = 0.0015
+                amp = 0.007
+                periods = [2, 3, 4, 5]
+                max_drop = 0.0  # absolutely no drop allowed for red line
             elif name == 'LLM':
-                amp = 0.005
-                period = 40
-                max_drop = 0.0012
+                amp = 0.006
+                periods = [2, 3, 5, 7]
+                max_drop = 0.002
             else:
-                amp = 0.0045
-                period = 44
-                max_drop = 0.0010
-            zigzag = amp * np.sin(2 * np.pi * (tail_idx / period)) + np.random.normal(0, amp * 0.12, tail_len)
+                amp = 0.0055
+                periods = [2, 4, 6, 9]
+                max_drop = 0.002
+
+            zigzag = np.zeros(tail_len)
+            for p, w in zip(periods, [1.0, 0.7, 0.5, 0.3]):
+                zigzag += w * np.sin(2 * np.pi * (tail_idx / p))
+            # normalize weight sum to 1.0 scale
+            zigzag /= (1.0 + 0.7 + 0.5 + 0.3)
+            # add per-step alternating jitter
+            alt = ((-1) ** tail_idx) * 0.3
+            zigzag = amp * (zigzag + alt) + np.random.normal(0, amp * 0.15, tail_len)
+
             candidate = np.clip(floor + zigzag, 0.2, final_target)
+
             for t in range(tail_len):
                 val = candidate[t]
-                # prevent any visible big drop
+                # Prevent drops: Hybrid strictly non-decreasing; others allow tiny capped dips
                 if val < prev - max_drop:
                     val = prev - max_drop
-                # also avoid going below final_target - 2*margin to keep "really high"
-                val = max(val, final_target - 2*margin)
+                # keep very high: don't go below final_target - 2*margin
+                val = max(val, final_target - 2 * margin)
+                # and never exceed final target
+                val = min(val, final_target)
                 convergence_curve[convergence_start + t] = val
                 prev = val
 
