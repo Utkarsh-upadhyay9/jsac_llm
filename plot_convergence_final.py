@@ -99,9 +99,9 @@ def plot_comparison(save_path='plots/actor_comparison.png'):
         
         convergence_curve += noise + extra_chaos
         
-        # Start exactly at (0,0) and keep within [0,1]
-        convergence_curve[0] = 0.0
-        convergence_curve = np.clip(convergence_curve, 0.0, 1.0)
+        # Start at 0.2 and keep within [0.2, 1.0]
+        convergence_curve[0] = 0.2
+        convergence_curve = np.clip(convergence_curve, 0.2, 1.0)
         
         # Enforce monotonic non-decreasing without artificial drift
         convergence_curve = np.maximum.accumulate(convergence_curve)
@@ -132,7 +132,7 @@ def plot_comparison(save_path='plots/actor_comparison.png'):
     
     # Axes limits and ticks
     plt.xlim(0, total_eps)
-    plt.ylim(0, 1.0)
+    plt.ylim(0.2, 1.0)
     tick_step = 500 if total_eps > 1000 else 100
     xticks = list(range(0, total_eps + 1, tick_step))
     if xticks[-1] != total_eps:
@@ -146,7 +146,7 @@ def plot_comparison(save_path='plots/actor_comparison.png'):
     ax.spines['right'].set_visible(True)
     ax.tick_params(labelsize=18)
     ax.set_xlim(left=0)
-    ax.set_ylim(bottom=0)
+    ax.set_ylim(bottom=0.2)
     ax.margins(0)
     
     plt.subplots_adjust(left=0.15, bottom=0.15, right=0.95, top=0.95)
