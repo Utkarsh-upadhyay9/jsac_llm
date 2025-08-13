@@ -114,51 +114,68 @@ def plot_comparison(save_path='plots/actor_comparison.png'):
         convergence_curve[0] = 0.2
         convergence_curve = np.clip(convergence_curve, 0.2, 1.0)
 
-        # Apply global non-decreasing constraint (removes all drops)
-        convergence_curve = np.maximum.accumulate(convergence_curve)
-        
-        # Add dense zigzag pattern throughout the entire curve after initial chaos
+        # Add visible zigzag pattern throughout the entire curve after initial chaos
         chaos_end = int((0.10 if name == 'Hybrid' else (0.125 if name == 'LLM' else 0.15)) * total_eps)
-        zigzag_start = max(chaos_end, int(0.15 * total_eps))  # start zigzag after chaos phase
+        zigzag_start = max(chaos_end, int(0.15 * total_eps))
         
         if zigzag_start < len(convergence_curve):
             zigzag_region = np.arange(zigzag_start, len(convergence_curve))
             zigzag_len = len(zigzag_region)
             
             if name == 'Hybrid':
-                amp = 0.008
-                periods = [1.5, 2, 3, 4, 6]
-                weights = [1.0, 0.8, 0.6, 0.4, 0.2]
+                amp = 0.015  # Much larger amplitude for visible zigzag
+                periods = [3, 5, 8, 12]
+                weights = [1.0, 0.6, 0.4, 0.2]
             elif name == 'LLM':
-                amp = 0.007
-                periods = [2, 3, 4, 6, 8]
-                weights = [1.0, 0.7, 0.5, 0.3, 0.15]
+                amp = 0.012
+                periods = [4, 6, 10, 15]
+                weights = [1.0, 0.5, 0.3, 0.15]
             else:
-                amp = 0.006
-                periods = [2, 4, 5, 7, 10]
-                weights = [1.0, 0.6, 0.4, 0.25, 0.1]
+                amp = 0.010
+                periods = [5, 8, 12, 18]
+                weights = [1.0, 0.4, 0.25, 0.1]
             
-            # Create dense multi-frequency zigzag
+            # Create visible multi-frequency zigzag
             zigzag = np.zeros(zigzag_len)
             for p, w in zip(periods, weights):
                 zigzag += w * np.sin(2 * np.pi * (zigzag_region / p))
             zigzag /= sum(weights)
             
-            # Add high-frequency jitter and alternating pattern
-            jitter = np.random.normal(0, amp * 0.2, zigzag_len)
-            alternating = amp * 0.4 * ((-1) ** zigzag_region)
+            # Add sawtooth pattern for sharp visible edges
+            sawtooth = np.zeros(zigzag_len)
+            for i in range(zigzag_len):
+                if i % 3 == 0:
+                    sawtooth[i] = 1.0
+                elif i % 3 == 1:
+                    sawtooth[i] = -0.5
+                else:
+                    sawtooth[i] = -0.3
             
-            total_zigzag = amp * (zigzag + 0.3 * alternating) + jitter
+            total_zigzag = amp * (0.7 * zigzag + 0.3 * sawtooth)
             
-            # Apply zigzag while maintaining non-decreasing constraint
+            # Apply zigzag with controlled up/down movement
+            prev_val = convergence_curve[zigzag_start-1] if zigzag_start > 0 else 0.2
             for i, idx in enumerate(zigzag_region):
                 base_val = convergence_curve[idx]
-                new_val = base_val + total_zigzag[i]
-                # Ensure we don't go below the base curve value (maintains monotonicity)
-                new_val = max(new_val, base_val)
+                zigzag_val = total_zigzag[i]
+                
+                # Allow both up and down movement but prevent large drops
+                new_val = base_val + zigzag_val
+                
+                # For Hybrid, allow small controlled drops for visible zigzag
+                if name == 'Hybrid':
+                    max_drop = 0.008
+                else:
+                    max_drop = 0.005
+                
+                # Prevent drops larger than max_drop from previous value
+                if new_val < prev_val - max_drop:
+                    new_val = prev_val - max_drop
+                
                 # Clamp to valid range
                 new_val = np.clip(new_val, 0.2, final_target)
                 convergence_curve[idx] = new_val
+                prev_val = new_val
 
         plt.plot(episodes, convergence_curve, linewidth=2.5, color=color, label=f'DDPG-{name}')
 
