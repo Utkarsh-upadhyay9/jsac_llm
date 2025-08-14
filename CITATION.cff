@@ -1,0 +1,15 @@
+cff-version: 1.2.0
+title: "JSAC LLM: Reinforcement Learning for Secrecy with LLM-based Actors"
+authors:
+  - family-names: Upadhyay
+    given-names: Utkarsh
+keywords:
+  - reinforcement learning
+  - secrecy rate
+  - reconfigurable intelligent surface
+  - large language model
+  - hybrid actor
+license: MIT
+version: 0.1.0
+doi: 10.0000/placeholder-doi
+message: "If you use this repository, please cite this metadata file."
