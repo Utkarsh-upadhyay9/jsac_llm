@@ -140,7 +140,7 @@ def plot_convergence_antennas_power():
     plt.plot(episodes, hybrid_no_dam, 'g--', label='w/o DAM Hybrid', linewidth=2.0)
     
     plt.xlabel('Episodes', fontsize=18)
-    plt.ylabel('Secracy Rate (bps/Hz)', fontsize=18)
+    plt.ylabel('Secrecy Rate (bps/Hz)', fontsize=18)
     # No title per request
     plt.legend(fontsize=18, ncol=2)
     plt.grid(True, alpha=0.3)
@@ -192,7 +192,7 @@ def plot_rewards_vs_vus():
                 linewidth=2.5, markersize=msize, label=alg)
 
     ax.set_xlabel('Number of Vehicular Users V', fontsize=18)
-    ax.set_ylabel('Secracy Rate (bps/Hz)', fontsize=18)
+    ax.set_ylabel('Secrecy Rate (bps/Hz)', fontsize=18)
     ax.tick_params(labelsize=18)
 
     ax.grid(True, alpha=0.3)
@@ -237,7 +237,7 @@ def plot_rewards_vs_targets():
                 linewidth=2.5, markersize=msize, label=alg)
 
     ax.set_xlabel('Number of Eavesdroppers E', fontsize=18)
-    ax.set_ylabel('Secracy Rate (bps/Hz)', fontsize=18)
+    ax.set_ylabel('Secrecy Rate (bps/Hz)', fontsize=18)
     ax.tick_params(labelsize=18)
 
     ax.grid(True, alpha=0.3)
@@ -294,7 +294,7 @@ def plot_secrecy_vs_ris_elements():
     plt.plot(ris_elements, without_ris_data['Hybrid'], 'g:', linewidth=2.5, label='Hybrid w/o RIS')
 
     plt.xlabel('Number of RIS Elements', fontsize=18)
-    plt.ylabel('Secracy Rate (bps/Hz)', fontsize=18)
+    plt.ylabel('Secrecy Rate (bps/Hz)', fontsize=18)
     plt.legend(fontsize=18, ncol=1, frameon=True, fancybox=True, shadow=True, framealpha=0.9, loc='upper left')
     ax = plt.gca()
     ax.tick_params(labelsize=18)
@@ -347,7 +347,7 @@ def plot_secrecy_vs_power():
     plt.plot(power_dbm, secrecy_hyb_no, 'g--s', linewidth=2.0, label='w/o DAM Hybrid')
 
     plt.xlabel('Total Power (dBm)', fontsize=18)
-    plt.ylabel('Secracy Rate (bps/Hz)', fontsize=18)
+    plt.ylabel('Secrecy Rate (bps/Hz)', fontsize=18)
     plt.legend(fontsize=18, ncol=2)
     plt.grid(True, alpha=0.3)
     
@@ -397,7 +397,7 @@ def plot_secrecy_vs_beta():
     plt.plot(beta_range, secrecy_hyb_no, 'g--s', linewidth=2.0, label='w/o DAM Hybrid')
 
     plt.xlabel('β', fontsize=18)
-    plt.ylabel('Secracy Rate (bps/Hz)', fontsize=18)
+    plt.ylabel('Secrecy Rate (bps/Hz)', fontsize=18)
     plt.legend(fontsize=18, ncol=2)
     plt.grid(True, alpha=0.3)
     
@@ -446,7 +446,7 @@ def plot_secrecy_vs_bandwidth():
     plt.plot(bw, vu10_hyb, 'g--s', linewidth=2.0, label='VU=10 Hybrid')
 
     plt.xlabel('Bandwidth (MHz)', fontsize=18)
-    plt.ylabel('Secracy Rate (bps/Hz)', fontsize=18)
+    plt.ylabel('Secrecy Rate (bps/Hz)', fontsize=18)
     plt.legend(fontsize=18, ncol=2)
     plt.grid(True, alpha=0.3)
     
@@ -469,7 +469,7 @@ def plot_secrecy_vs_bandwidth():
     ax.autoscale(tight=True)
     
     plt.subplots_adjust(left=0.15, bottom=0.15, right=0.95, top=0.95)
-    plt.savefig(f"{plots_dir}/fig7_secracy_vs_bandwidth.png", dpi=300, bbox_inches='tight')
+    plt.savefig(f"{plots_dir}/fig7_secrecy_vs_bandwidth.png", dpi=300, bbox_inches='tight')
     plt.close()
     print("✓ Figure 7 saved")
 
@@ -496,7 +496,7 @@ def plot_secrecy_vs_antennas():
     plt.plot(ants, vu10_hyb, 'g--s', linewidth=2.0, label='VU=10 Hybrid')
 
     plt.xlabel('Number of BS Antennas', fontsize=18)
-    plt.ylabel('Secracy Rate (bps/Hz)', fontsize=18)
+    plt.ylabel('Secrecy Rate (bps/Hz)', fontsize=18)
     plt.legend(fontsize=18, ncol=2)
     plt.grid(True, alpha=0.3)
     
@@ -519,7 +519,7 @@ def plot_secrecy_vs_antennas():
     ax.autoscale(tight=True)
     
     plt.subplots_adjust(left=0.15, bottom=0.15, right=0.95, top=0.95)
-    plt.savefig(f"{plots_dir}/fig8_secracy_vs_antennas.png", dpi=300, bbox_inches='tight')
+    plt.savefig(f"{plots_dir}/fig8_secrecy_vs_antennas.png", dpi=300, bbox_inches='tight')
     plt.close()
     print("✓ Figure 8 saved")
 
@@ -541,7 +541,7 @@ def plot_secrecy_rate_convergence():
     plt.plot(episodes, hybrid_secrecy, 'g-.', label='Hybrid Actor', linewidth=2)
     
     plt.xlabel('Episodes', fontsize=18)
-    plt.ylabel('Secracy Rate (bps/Hz)', fontsize=18)
+    plt.ylabel('Secrecy Rate (bps/Hz)', fontsize=18)
     plt.legend(fontsize=18)
     plt.grid(True, alpha=0.3)
     

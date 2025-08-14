@@ -2,6 +2,13 @@
 
 Thank you for your interest in contributing to this research project! This document provides guidelines for contributing to the JSAC (Joint Sensing and Communication) implementation with LLM-based actors.
 
+## Quick Contribution TL;DR
+1. Fork + branch
+2. Make atomic change (one concern)
+3. Regenerate any affected plots (keep artifacts synced)
+4. Add / update docstrings
+5. Open PR with rationale + sample figure (if visual)
+
 ## Getting Started
 
 ### Prerequisites
