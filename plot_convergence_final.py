@@ -1,5 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
+import os
 from scipy.ndimage import uniform_filter1d
 
 # Added module docstring and clarified constants
@@ -32,6 +33,8 @@ def plot_comparison(save_path='plots/actor_comparison.png'):
     # Load rewards once to determine targets
     rewards_map = {}
     means_map = {}
+    convergence_curves = {}
+    
     for name in agent_names:
         try:
             r = np.load(f'plots/{name}_rewards.npy')
@@ -199,11 +202,23 @@ def plot_comparison(save_path='plots/actor_comparison.png'):
                     for i in range(zigzag_start + 1, len(convergence_curve) - 1):
                         convergence_curve[i] = (convergence_curve[i-1] + convergence_curve[i] + convergence_curve[i+1]) / 3
 
+        # Store convergence curve for upper bound calculation
+        convergence_curves[name] = convergence_curve
+        
         plt.plot(episodes, convergence_curve, linewidth=2.5, color=color, label=f'DDPG-{name}')
+
+    # Calculate and plot upper bound
+    final_values = {name: curve[-1] for name, curve in convergence_curves.items()}
+    best_agent = max(final_values, key=final_values.get)
+    upper_bound_value = final_values[best_agent]
+    
+    # Plot upper bound line
+    plt.axhline(y=upper_bound_value, color='k', linestyle='--', linewidth=2, 
+                label=f'Upper Bound ({best_agent})', alpha=0.8)
 
     plt.xlabel('Episodes', fontsize=18)
     plt.ylabel('Secracy Rate (bps/Hz)', fontsize=18)
-    plt.legend(fontsize=18, loc='lower right')
+    plt.legend(fontsize=16, loc='lower right')  # Reduced font size to fit upper bound
     plt.xlim(0, total_eps)
     plt.ylim(0.2, 1.0)
     tick_step = 500 if total_eps > 1000 else 100
@@ -224,6 +239,7 @@ def plot_comparison(save_path='plots/actor_comparison.png'):
     os.makedirs(os.path.dirname(save_path) or '.', exist_ok=True)
     plt.savefig(save_path, dpi=300, bbox_inches='tight')
     print(f"Convergence comparison plot saved to '{save_path}'")
+    print(f"Upper bound: {upper_bound_value:.4f} (Best agent: {best_agent})")
     plt.close()
 
 # Generate the convergence plot

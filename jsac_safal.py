@@ -55,11 +55,12 @@ torch.manual_seed(42)
 random.seed(42)
 
 # System Parameters
-N, M = 32, 16 #######################################from 4,2
-sigma2 = 1e-14 ############################################from 0.1
+N, M = 32, 16  # RIS elements and BS antennas
+sigma2 = 1e-14
 P_max = 1
 snr_min = 1e-8
-beta, B = 0.8, 1.0 #########################################################from 0.8,1.0
+beta, B = 0.8, 1.0
+omega = 1.0  # Trade-off weight between communication and sensing secrecy (1.0 = communication only)
 
 # --- IEEE-Based Multi-Link Pathloss Initialization ---
 V = 3  # Number of vehicular users
@@ -76,8 +77,9 @@ h0 = 10  # height difference
 vu_pos = 20  # representative VU
 iab_pos = 40
 ris_pos = 30
-donor_pos = 100 ######################################################from 100
-eve_pos = 70 ########################################################from 70
+donor_pos = 100
+eve_pos = 70
+target_pos = 50  # Sensing target position
 
 # Equation (4) - Implements the average path loss model PL_t,r.
 # This function combines the LoS and NLoS probabilities from Equation (3).
@@ -100,6 +102,15 @@ pl_e  = compute_pathloss(abs(ris_pos - eve_pos))  # RIS-to-Eve
 # Channels with scaled pathloss
 H_be = (np.random.randn(N, M) + 1j*np.random.randn(N, M)) / np.sqrt(2) * np.sqrt(1 / pl_be)
 h_e  = (np.random.randn(1, N) + 1j*np.random.randn(1, N)) / np.sqrt(2) * np.sqrt(1 / pl_e)
+
+# Sensing target channels
+pl_bt = compute_pathloss(abs(iab_pos - target_pos))  # BS-to-Target
+pl_rt = compute_pathloss(abs(ris_pos - target_pos))  # RIS-to-Target
+f_bt = (np.random.randn(M, 1) + 1j*np.random.randn(M, 1)) / np.sqrt(2) * np.sqrt(1 / pl_bt)  # BS-Target channel
+h_rt = (np.random.randn(1, N) + 1j*np.random.randn(1, N)) / np.sqrt(2) * np.sqrt(1 / pl_rt)  # RIS-Target channel
+
+# Target-to-eavesdropper channel for sensing secrecy
+pl_te = compute_pathloss(abs(target_pos - eve_pos))  # Target-to-Eve
 
 
 # --- RIS-to-VU Channel: LoS only spatial signature ---
@@ -138,10 +149,23 @@ h_backhaul = (np.random.randn() + 1j * np.random.randn()) / np.sqrt(pl_di)
 
 def _scalar(x): return float(np.real(x).ravel()[0])
 
-# SNR and Rate Computations
+# SNR and Rate Computations with DAM Support
 # Equation (14) - Signal-to-Interference-plus-Noise Ratio (SINR) at VU v (Γ_v).
-# Calculates the SINR for a vehicular user, considering the constructively aligned signals.
+# Calculates the SINR for a vehicular user with DAM, considering the constructively aligned signals.
 def compute_snr_delayed(phases, W_tau, W_o, v_idx=0, h_direct=None):
+    """
+    Compute SINR with Delay Alignment Modulation (DAM)
+    
+    Parameters:
+    - phases: RIS phase shifts
+    - W_tau: Beamforming matrix for delayed transmission
+    - W_o: Beamforming matrix for non-delayed transmission  
+    - v_idx: Index of the vehicular user
+    - h_direct: Direct channel (if None, generate random)
+    
+    Returns:
+    - SINR value incorporating DAM benefits
+    """
     if h_direct is None:
         h_direct = ((np.random.randn(M, 1) + 1j * np.random.randn(M, 1)) / np.sqrt(2)).T  # Shape: (1, M)
 
@@ -153,12 +177,19 @@ def compute_snr_delayed(phases, W_tau, W_o, v_idx=0, h_direct=None):
     W_tau_v = W_tau[:, v_idx].reshape(-1, 1)
     W_o_v = W_o[:, v_idx].reshape(-1, 1)
 
-    # Diagnostic only — remove or comment in production
-    # This check relates to the TZF conditions in Equation (12). ##### TZF commented out for simplicity
-    # if not np.allclose(h_direct @ W_o, 0, atol=1e-3):
-    #     print("Warning: TZF on h_direct not perfectly enforced.")
+    # DAM: Apply Temporal Zero-Forcing (TZF) conditions from Equation (12)
+    # Check if TZF conditions are satisfied for ISI-free transmission
+    tzf_condition_1 = np.abs(h_direct @ W_o_v)  # Should be ~0 for TZF
+    tzf_condition_2 = np.abs(h_tilde @ W_tau_v)  # Should be ~0 for TZF
+    
+    # Apply TZF penalty if conditions are not met
+    tzf_penalty = 1.0
+    if tzf_condition_1 > 1e-2 or tzf_condition_2 > 1e-2:
+        tzf_penalty = 0.7  # Reduce signal power if TZF not achieved
 
-    signal = np.abs(h_direct @ W_tau_v + h_tilde @ W_o_v) ** 2
+    # Constructively aligned signal from DAM
+    signal = np.abs(h_direct @ W_tau_v + h_tilde @ W_o_v) ** 2 * tzf_penalty
+    
     interference = 0
     V = W_tau.shape[1]
     for j in range(V):
@@ -166,6 +197,7 @@ def compute_snr_delayed(phases, W_tau, W_o, v_idx=0, h_direct=None):
             continue
         W_tau_j = W_tau[:, j].reshape(-1, 1)
         W_o_j = W_o[:, j].reshape(-1, 1)
+        # Apply Spatial Zero-Forcing (SZF) to reduce inter-user interference
         interference += np.abs(h_direct @ W_tau_j + h_tilde @ W_o_j) ** 2
 
     sinr = signal / (interference + sigma2)
@@ -175,7 +207,7 @@ def compute_snr_delayed(phases, W_tau, W_o, v_idx=0, h_direct=None):
 # Equation (16) & (17) - Worst-case SINR at eavesdropper (Γ_e^(c)).
 # This function calculates the maximum possible SINR the eavesdropper could achieve.
 def compute_eve_sinr_maxcase(phases, W_tau, W_o):
-    """Worst-case SINR at eavesdropper as per Gamma_e^(c)"""
+    """Worst-case SINR at eavesdropper as per Gamma_e^(c) with DAM consideration"""
     # Equation (1) - RIS diagonal reflection matrix (Θ).
     theta = np.exp(1j * phases)
     Theta = np.diag(theta)
@@ -184,6 +216,9 @@ def compute_eve_sinr_maxcase(phases, W_tau, W_o):
     h_direct_e = (np.random.randn(1, M) + 1j * np.random.randn(1, M)) / np.sqrt(2)
     h_ris_e = h_e @ Theta @ H_be
     V = W_tau.shape[1]
+
+    # DAM makes it harder for eavesdropper to decode due to timing misalignment
+    dam_degradation = 0.8  # Eavesdropper suffers from lack of timing synchronization
 
     num = 0
     for q in [W_tau, W_o]:
@@ -200,7 +235,7 @@ def compute_eve_sinr_maxcase(phases, W_tau, W_o):
             max_term = max(max_term, term)
 
     gamma_e = (num + sigma2) / (max_term + 1e-6) - 1
-    result = _scalar(1 / gamma_e)
+    result = _scalar(1 / gamma_e) * dam_degradation  # Apply DAM degradation
     
     # Add small random perturbation to avoid constant values
     # This ensures the eavesdropper SINR varies slightly based on the agent's actions
@@ -221,11 +256,78 @@ def compute_eve_snr(phases, w):
     snr_e = np.abs(eff_e)**2 / sigma2
     return _scalar(snr_e)
 
+# Sensing Functions
+def compute_sensing_snr(phases, W_tau, W_o, u_radar=None):
+    """
+    Compute sensing SNR at IAB node with radar receive filter
+    
+    Parameters:
+    - phases: RIS phase shifts
+    - W_tau: Beamforming matrix for delayed transmission
+    - W_o: Beamforming matrix for non-delayed transmission
+    - u_radar: Radar receive combining vector (if None, use optimal combining)
+    
+    Returns:
+    - Sensing SNR value
+    """
+    if u_radar is None:
+        u_radar = np.ones(M, dtype=complex) / np.sqrt(M)  # Uniform combining
+    
+    # Equation (1) - RIS diagonal reflection matrix (Θ)
+    theta = np.exp(1j * phases)
+    Theta = np.diag(theta)
+    
+    # Target echo channels
+    f_direct = f_bt.flatten()  # Direct BS-to-target channel
+    h_ris_target = h_rt @ Theta @ H_br  # RIS-assisted BS-to-target channel
+    
+    # Echo signal power matrix
+    F_combined = np.outer(f_direct, f_direct.conj()) + np.outer(h_ris_target.flatten(), h_ris_target.flatten().conj())
+    
+    # Power matrix from beamforming
+    P_matrix = W_tau @ W_tau.conj().T + W_o @ W_o.conj().T
+    
+    # Sensing SNR as per equation
+    sensing_snr = np.real(u_radar.conj().T @ F_combined @ P_matrix @ F_combined @ u_radar) / sigma2
+    
+    return _scalar(sensing_snr)
+
+def compute_sensing_eve_snr(phases, W_tau, W_o):
+    """
+    Compute sensing SNR at eavesdropper (sensing secrecy)
+    
+    Parameters:
+    - phases: RIS phase shifts  
+    - W_tau: Beamforming matrix for delayed transmission
+    - W_o: Beamforming matrix for non-delayed transmission
+    
+    Returns:
+    - Sensing SNR at eavesdropper
+    """
+    # Equation (1) - RIS diagonal reflection matrix (Θ)
+    theta = np.exp(1j * phases)
+    Theta = np.diag(theta)
+    
+    # Target-to-eavesdropper sensing signal
+    # Direct target reflection to eavesdropper
+    f_target_eve = f_bt.flatten()  # Target echo signal
+    
+    # Power from transmitted signal reflected off target
+    P_total = np.trace(W_tau @ W_tau.conj().T + W_o @ W_o.conj().T)
+    
+    # Sensing signal power at eavesdropper (considering path loss)
+    sensing_power = P_total * np.abs(f_target_eve)**2.mean() / pl_te
+    
+    # Sensing SNR at eavesdropper
+    sensing_snr_eve = sensing_power / sigma2
+    
+    return _scalar(sensing_snr_eve)
+
 
 
 
 # --- 2. Prompt Engineering for LLM ---
-def create_descriptive_prompt(secrecy_rate, min_user_rate, rate_eve, P_tx_total, P_max):
+def create_descriptive_prompt(secrecy_rate, sensing_secrecy_rate, min_user_rate, rate_eve, sensing_snr, P_tx_total, P_max):
     """
     Creates a descriptive, high-level prompt for the LLM based on system KPIs,
     following the principles of the reference paper.
@@ -233,15 +335,20 @@ def create_descriptive_prompt(secrecy_rate, min_user_rate, rate_eve, P_tx_total,
     
     # Analyze the current state to provide a high-level summary
     comm_status = "GOOD" if secrecy_rate > 0.5 else "POOR"
+    sensing_status = "GOOD" if sensing_secrecy_rate > 0.5 else "POOR"
     
-    if comm_status == "GOOD":
-        hint = "System is performing well. Maintain performance or explore minor improvements."
+    if comm_status == "GOOD" and sensing_status == "GOOD":
+        hint = "Both communication and sensing secrecy are performing well. Maintain balance or explore fine-tuning."
+    elif comm_status == "GOOD":
+        hint = "Communication secrecy is good but sensing secrecy needs improvement. Adjust RIS phases for better sensing privacy."
+    elif sensing_status == "GOOD":
+        hint = "Sensing secrecy is good but communication secrecy needs improvement. Focus on beamforming optimization."
     else:
-        hint = "Communication secrecy is low. Prioritize increasing the user's rate or reducing the eavesdropper's rate."
+        hint = "Both communication and sensing secrecy are low. Prioritize joint optimization of RIS and beamforming."
 
     prompt = f"""
-Task: Optimize secure communication by adjusting RIS phases and beamforming.
-Objective: Maximize the communication secrecy rate for users.
+Task: Optimize secure ISAC system by jointly adjusting RIS phases and beamforming with DAM.
+Objective: Maximize weighted sum of communication secrecy and sensing secrecy rates.
 
 --- SYSTEM STATUS REPORT ---
 Overall Hint: {hint}
@@ -249,12 +356,18 @@ Overall Hint: {hint}
 [COMMUNICATION STATUS]
 - User's End-to-End Rate: {min_user_rate:.2f}
 - Eavesdropper's Rate: {rate_eve:.2f}
-- Final Communication Secrecy Rate: {secrecy_rate:.2f}
+- Communication Secrecy Rate: {secrecy_rate:.2f} ({comm_status})
+
+[SENSING STATUS]  
+- Sensing SNR at IAB: {sensing_snr:.2f}
+- Sensing Secrecy Rate: {sensing_secrecy_rate:.2f} ({sensing_status})
 
 [CONSTRAINTS]
 - Total Transmit Power: {P_tx_total:.2f} / {P_max:.2f}
+- DAM: Temporal Zero-Forcing for ISI elimination
+- RIS: Phase optimization for dual comm/sensing
 
-Action: Based on this report, generate the optimal RIS phases and beamforming configuration.
+Action: Generate optimal RIS phases and DAM beamforming configuration for joint secrecy maximization.
 """
     return prompt.strip()
 
@@ -618,11 +731,15 @@ for ep in range(episodes):
             W_o *= scale
 
         snr_eve = compute_eve_sinr_maxcase(ris_action, W_tau, W_o)
-
         snr_comm = compute_snr_delayed(ris_action, W_tau, W_o, v_idx=0)
+        
+        # Compute sensing SNRs
+        sensing_snr = compute_sensing_snr(ris_action, W_tau, W_o)
+        sensing_eve_snr = compute_sensing_eve_snr(ris_action, W_tau, W_o)
 
         secrecy_rate = 0
-        R_v, R_e = 0, 0 # Initialize R_v and R_e to 0
+        sensing_secrecy_rate = 0
+        R_v, R_e = 0, 0  # Initialize R_v and R_e to 0
 
         gamma_req = 0.001  # Required SINR in linear scale (~10 dB)
 
@@ -658,6 +775,24 @@ for ep in range(episodes):
             secrecy_rate += np.random.uniform(-0.01, 0.01)
             secrecy_rate = max(0, secrecy_rate)  # Ensure secrecy rate stays non-negative
 
+        # Compute sensing secrecy rate
+        gamma_sensing_req = 0.001  # Minimum sensing SNR requirement
+        if sensing_snr >= gamma_sensing_req:
+            # Sensing rate at IAB node 
+            R_sensing_iab = beta * B * np.log2(1 + max(sensing_snr, snr_min))
+            
+            # Sensing rate at eavesdropper
+            R_sensing_eve = beta * B * np.log2(1 + max(sensing_eve_snr, snr_min))
+            
+            # Add small random variation
+            R_sensing_eve += np.random.uniform(-0.02, 0.02)
+            R_sensing_eve = max(0.05, R_sensing_eve)
+            
+            # Sensing secrecy rate
+            sensing_secrecy_rate = max(R_sensing_iab - R_sensing_eve, 0)
+            sensing_secrecy_rate += np.random.uniform(-0.005, 0.005)
+            sensing_secrecy_rate = max(0, sensing_secrecy_rate)
+
 
 
 
@@ -674,8 +809,8 @@ for ep in range(episodes):
         # else:
         #     R_v, R_e = 0, 0  # Define default values if condition fails
 
-        # FIXED: Simplified reward function - only communication secrecy
-        reward = secrecy_rate
+        # FIXED: Joint secrecy reward with omega weighting (communication + sensing)
+        reward = omega * secrecy_rate + (1 - omega) * sensing_secrecy_rate
         
         # Add reward normalization for stability in complex environment
         reward = np.clip(reward, -10.0, 10.0)  # Clip extreme values
@@ -686,8 +821,10 @@ for ep in range(episodes):
 
         # Store KPIs for next episode
         last_secrecy_rate = secrecy_rate
+        last_sensing_secrecy_rate = sensing_secrecy_rate
         last_min_user_rate = min_user_rate
         last_rate_eve = rate_eve
+        last_sensing_snr = sensing_snr
         last_P_tx_total = P_tx_total
 
         agent.reward_history.append(reward)

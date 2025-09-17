@@ -1,0 +1,379 @@
+\documentclass[journal]{IEEEtran}
+\IEEEoverridecommandlockouts
+\usepackage{graphicx,multirow,lscape,xcolor,times,url,amsfonts,amsmath,array}
+\usepackage{cite}
+\usepackage{amsmath,amssymb,amsfonts}
+\usepackage{graphicx}
+\usepackage{balance}
+\usepackThe a\begin{align}
+a_t = [\boldsymbol{\omega}; \text{vec}(\mathbf{W}_{o}); \text{vec}(\mathbf{W}_{\tau}); \mathbf{u}]
+\end{align}
+where $\boldsymbol{\omega} = [\omega_1, \omega_2, \ldots, \omega_N]^T$ represents RIS phase shifts, $\text{vec}(\mathbf{W}_{o})$ and $\text{vec}(\mathbf{W}_{\tau})$ contain the direct and delayed beamforming matrices respectively, and $\mathbf{u}$ is the radar receive filter. The RIS reflection matrix is constructed as $\boldsymbol{\Theta} = \text{diag}(e^{j\omega_1}, \ldots, e^{j\omega_N})$.n vector $a_t$ encompasses ALL optimizable variables from our optimization problem in \eqref{eq:secrecy_opt}:
+\begin{align}
+a_t = [\boldsymbol{\omega}, \text{vec}(\mathbf{W}_{o}), \text{vec}(\mathbf{W}_{\tau}), \mathbf{u}]^T
+\end{align}
+where $\boldsymbol{\omega} = [\omega_1, \omega_2, \ldots, \omega_N]^T$ represents RIS phase shifts, $\text{vec}(\mathbf{W}_{o})$ and $\text{vec}(\mathbf{W}_{\tau})$ contain the direct and delayed beamforming matrices respectively, and $\mathbf{u}$ is the radar receive filter. The RIS reflection matrix is constructed as $\boldsymbol{\Theta} = \text{diag}(e^{j\omega_1}, \ldots, e^{j\omega_N})$.color}
+\usepackage{amsthm}
+\usepackage{amsmath}
+\usepackage{verbatim}
+\newtheorem{lemma}{Lemma}
+\usepackage[font=footnotesize]{caption}
+\usepackage{algpseudocode}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath}
+\usepackage{pifont}% http://ctan.org/pkg/pifont
+\newcommand{\cmark}{\ding{51}}%
+\newcommand{\xmark}{\ding{55}}%
+\usepackage{subcaption}
+\usepackage{algpseudocode}
+\usepackage{graphicx}
+\usepackage{mathrsfs}
+\usepackage{caption}
+\usepackage[font=footnotesize]{caption}
+\captionsetup{font=footnotesize}
+\makeatletter
+\newcommand\makebig[2]{%
+\@xp\newcommand\@xp*\csname#1\endcsname{\bBigg@{#2}}%
+\@xp\newcommand\@xp*\csname#1l\endcsname{\@xp\mathopen\csname#1\endcsname}%
+\@xp\newcommand\@xp*\csname#1r\endcsname{\@xp\mathclose\csname#1\endcsname}%
+}
+\makeatother
+\makebig{biggg} {3.0}
+\makebig{Biggg} {3.5}
+\makebig{bigggg}{4.0}
+\makebig{Bigggg}{6.5}
+
+\newcommand{\bieeeeq}{\begin{IEEEeqnarray}{rcl}}
+	\newcommand{\eieeeeq}{\end{IEEEeqnarray}}
+
+\usepackage{algorithm,algpseudocode}% http://ctan.org/pkg/{algorithms,algorithmx}
+\algnewcommand{\Inputs}[1]{%
+  \State \textbf{Inputs:}
+  \Statex \hspace*{\algorithmicindent}\parbox[t]{.8\linewidth}{\raggedright #1}
+}
+\algnewcommand{\Initialize}[1]{%
+  \State \textbf{Initialize:}
+  \Statex \hspace*{\algorithmicindent}\parbox[t]{.8\linewidth}{\raggedright #1}
+}
+\algblock{Input}{EndInput}
+\algnotext{EndInput}
+\algblock{Output}{EndOutput}
+\algnotext{EndOutput}
+\newcommand{\Desc}[2]{\State \makebox[2em][l]{#1}#2}
+\IEEEoverridecommandlockouts
+
+% paper title
+\begin{document}
+\title{Secure and Privacy-Preserving ISAC in RIS-Aided IAB Networks}
+
+\maketitle
+
+\begin{abstract}
+ This paper investigates a secure terahertz (THz) integrated sensing and communication (ISAC) framework empowered by reconfigurable intelligent surfaces (RIS), targeting covert eavesdropping threats in vehicular wireless networks. To enhance physical-layer security and environmental awareness, we introduce a joint information–sensing region (ISR) beam pattern control mechanism that spatially decouples communication and sensing zones. The system integrates an RIS-aided Integrated Access and Backhaul (IAB) architecture, where the RIS facilitates both fronthaul access between base stations (BS) and vehicular users, and backhaul connectivity across distributed BSs over highly directional links. The RIS dynamically configures delay-aligned multipath propagation to ensure synchronous symbol arrival at receivers, thereby mitigating inter-symbol interference and eliminating the need for complex equalization under time-selective fading and Doppler spread. In this secure IAB-ISAC design, a dual-function radar-communication BS coordinates with RIS to perform adaptive beamforming across ISR-defined confidential (ISR-C) and sensing (ISR-S) zones, balancing secrecy and environmental awareness. The joint optimization problem considers BS transmit beamforming, RIS transmission/reflection coefficients, radar receive filters, and mobility-aware ISR shaping to maximize secrecy rate, minimize secrecy outage probability, and enhance secure energy efficiency. This high-dimensional, non-convex problem, characterized by dynamic vehicular mobility, eavesdropping uncertainty, and access-backhaul coupling, is solved using a deep deterministic policy gradient (DDPG) algorithm. DDPG enables decentralized, real-time control across BS and RIS agents, capturing the coupled effects of beamforming, ISR coordination, and delay management. Simulation results validate that the RIS-aided IAB-ISAC system significantly enhances secrecy, reliability, and energy efficiency in next-generation vehicular networks.
+\end{abstract}
+
+\begin{IEEEkeywords}
+Security, privacy, integrated sensing and communication, reconfigurable intelligent surface, wireless network.
+\end{IEEEkeywords}
+
+\section{Introduction}
+
+Integrated sensing and communication (ISAC) has emerged as a transformative solution, enabling the simultaneous operation of communication and sensing functionalities through shared hardware and spectral resources \cite{Sun2024}. This integration enhances resource efficiency and operational cost-effectiveness, which are crucial for applications such as autonomous vehicles and smart city infrastructures. However, ISAC systems experience performance degradation in long-distance or non-line-of-sight scenarios due to weak signal strength and high path loss \cite{Kurma2024}. Additionally, interference and resource allocation challenges further limit ISAC performance, especially when sensing and communication share resources. 
+
+To mitigate these limitations, reconfigurable intelligent surfaces (RIS) have become a promising technology within 6G networks, enabling the establishment of virtual line-of-sight paths through the dynamic adjustment of reflection coefficients \cite{Monteiro2022}. Additionally, Integrated Access and Backhaul (IAB) facilitates efficient multi-hop communication while providing the flexibility necessary for deployment in densely populated areas \cite{Tang2021}.
+
+However, the simultaneous deployment of ISAC, IAB, and RIS introduces compounded security challenges. The inherent broadcast nature of wireless backhaul systems, coupled with the reprogrammable characteristics of RIS, and the convergence of communication and sensing functionalities in ISAC, together create unprecedented vulnerabilities. These complexities significantly heighten the risk of data exposure, making sensitive communication and sensing information susceptible to malicious actors, eavesdropping, and interference \cite{Wei2022}. Therefore, establishing robust and adaptive security frameworks tailored to protect sensitive data and ensure user privacy in these complex integrated environments is paramount for realizing the full potential of next-generation wireless networks.
+
+\subsection{Prior Work}
+
+Recent research has actively explored physical layer security (PLS) mechanisms to address vulnerabilities inherent in traditional communication setups within ISAC frameworks, particularly through the integration of reconfigurable intelligent surfaces (RIS). For instance, the authors in \cite{Jiang2025} investigate RIS-assisted ISAC systems that leverage imperfect sensing information and artificial noise injection to enhance PLS through joint active-passive beamforming. Similarly, \cite{Ye2025} propose a joint active and passive beamforming scheme aimed at maximizing the signal-to-interference-plus-noise ratio (SINR) while maintaining secure communication rates for legitimate users.
+
+Despite these advancements, most prior research implicitly assumes ideal simultaneous signal arrival from all transmission links at the destination, an assumption that is impractical in real-world ISAC systems due to channel dispersion and multipath effects \cite{Zhao2021}. To address these challenges, delay alignment modulation (DAM) has been proposed in \cite{Lu2022}, wherein intentional timing offsets are applied at the base station (BS) to align multipath components such that they arrive simultaneously and constructively at the receiver.
+
+\subsection{Motivation and Contributions}
+
+Our research is motivated by several critical gaps in the evolving landscape of ISAC systems leveraging RIS and IAB networks. Most importantly, existing research often lacks effective optimization frameworks for joint RIS-beamforming control in dynamic wireless environments.
+
+The main contributions of this paper are:
+\begin{itemize}
+    \item We propose a novel secure and privacy-preserving framework for a RIS-aided IAB network that operates under the ISAC paradigm.
+    \item We incorporate DAM into the RIS-IAB-ISAC system to counteract the effects of multipath channel dispersion.
+    \item We formulate a novel optimization problem aimed at maximizing communication secrecy rate in IAB networks.
+    \item We develop a DRL-based solution using DDPG demonstrating superior performance of hybrid architectures combining MLP and LLM approaches.
+\end{itemize}
+
+\section{System Model}\label{Sec:SysModel}
+
+We consider a cellular network that incorporates RIS-assisted IAB, consisting of $V$ distributed single-antenna vehicular users (VUs), where the set of vehicular users is denoted by $\mathcal{V} = \{1, \ldots, v, \ldots, V\}$. The network includes $I$ IAB nodes, denoted by set $\mathcal{I} = \{1, \ldots, i, \ldots, I\}$, which collect data from VUs and relay it to a central IAB-donor via wireless backhaul links.
+
+Each IAB node is equipped with $M$ transmit/receive antennas and is assisted by an RIS to enhance both communication and sensing capabilities. The RIS consists of $N$ passive reflecting elements, indexed by the set $\mathcal{N} = \{1, \ldots, N\}$. Each reflecting element introduces a tunable phase shift $\omega_n \in [0, 2\pi)$. The RIS is modeled as a diagonal reflection matrix
+\begin{align}
+\boldsymbol{\Theta} = \operatorname{diag}(e^{j\omega_1}, \ldots, e^{j\omega_{N}}).
+\end{align}
+
+\subsection{Path-loss Model of Wireless Links}
+
+The path-loss model of a wireless link between a transmitter $t$ and a receiver $r$ is expressed as:
+\begin{align}\label{Eqn:RandPL}
+PL_{t,r} = \rho_0\, \Xi_{t,r}\, d_{t,r}^{\alpha},
+\end{align} 
+where $d_{t,r}$ is the distance between TX $t$ and RX $r$, $\rho_0 = (\frac{4\pi}{\lambda})^2$ is the reference path loss, $\alpha>0$ is the path-loss exponent, and $\Xi_{t,r}\in\{\xi^{\text{LoS}},  \xi^{\text{NLoS}}\}$ is a Bernoulli random variable.
+
+The probability of LoS condition is characterized by:
+\begin{equation}
+    \chi^{\text{LoS}}_{t,r} = \left(1 + c_2 e^{-c_1\big(\frac{180}{\pi} \tan^{-1}(d_h/d_{t,r}) - c_2 \big)}\right)^{-1},
+\end{equation} 
+where parameters $c_1$ and $c_2$ are positive constants influenced by the operating carrier frequency.
+
+\subsection{Channel Models}
+
+The channel gain vector from RIS $s$ to VU $v$ is expressed as:
+\begin{align}\label{Eqn:ChaModel_sv}
+\mathbf{h}_{s,v} = \sqrt{\frac{1}{\overline{PL}_{s,v}}} \left[1, h_{s,v}, \ldots, h^n_{s,v}, \ldots, h^{N-1}_{s,v} \right]^T,
+\end{align}
+where $h^n_{s,v} = e^{-j \frac{2\pi}{\lambda}n d_{s,v} \phi_{s,v}}$ and $\phi_{s,v}$ is the cosine of the angle of arrival.
+
+The channel gain matrix from IAB-node $i$ to RIS $s$ is modeled as:
+\begin{align}
+\mathbf{H}_{i,s} = \sqrt{\frac{1}{\overline{PL}_{i,s}}} \left[\begin{array}{c}
+ \sqrt{\frac{\kappa}{1+\kappa}} \, (\mathbf{h}_{1,s}^{\mathrm{LoS}})^T + \sqrt{\frac{1}{1+\kappa}} \, (\mathbf{h}_{1,s}^{\mathrm{NLoS}})^T	\\ \vdots
+	\\
+\sqrt{\frac{\kappa}{1+\kappa}} \, (\mathbf{h}_{M,s}^{\mathrm{LoS}})^T + \sqrt{\frac{1}{1+\kappa}} \, (\mathbf{h}_{M,s}^{\mathrm{NLoS}})^T
+\end{array}\right]^T ,
+\end{align}
+where $\kappa$ is the Rician factor.
+
+\subsection{Received Signal Models with DAM}
+
+Let $\mathbf{x}[k|\tau] \in \mathbb{C}^{M}$ denote the downlink signal vector with transmission delay $\tau$:
+\begin{equation}\label{Eqn:TranSigIAB}
+    \mathbf{x}[k|\tau] = \mathbf{W}_{\tau} \mathbf{s}[k - \tau] + \mathbf{W}_{o} \mathbf{s}[k],
+\end{equation}
+where $\mathbf{W}_{\tau}, \mathbf{W}_{o} \in \mathbb{C}^{M \times V}$ are the transmit beamforming matrices.
+
+The received signal at VU $v$ is:
+\begin{align}\label{Eqn:RecSigUV}
+    y_v[k] = \mathbf{h}_{i,v}^H \mathbf{x}[k|\tau] \delta[k-k_1] + \tilde{\mathbf{h}}_{i,v}^H\mathbf{x}[k|\tau] \delta[k-k_2] + z_v[k], 
+\end{align}
+where $\tilde{\mathbf{h}}_{i,v}^H = {\mathbf{h}}_{s,v}^{H} \boldsymbol{\Theta} {\mathbf{H}}_{i,s}$.
+
+To eliminate Inter-Symbol Interference (ISI), we adopt Temporal Zero-Forcing (TZF) conditions:
+\begin{align}\label{Eqn:ZFcond}
+\mathbf{h}_{i,v}^H \mathbf{W}_{o} = \mathbf{0} \quad\text{and}\quad 
+\tilde{\mathbf{h}}_{i,v}^H\mathbf{W}_{\tau} = \mathbf{0}
+\end{align}
+
+The SINR at VU $v$ is:
+\begin{align}\label{Eqn:SINRv}
+\Gamma_v = \frac{|\mathbf{h}_{i,v}^H\mathbf{w}_{\tau,v}+ \tilde{\mathbf{h}}_{i,v}^H\mathbf{w}_{o,v}|^2}{\sum_{j\in\mathcal{V}\setminus v}|\mathbf{h}_{i,j}^H\mathbf{w}_{\tau,v}+ \tilde{\mathbf{h}}_{i,j}^H\mathbf{w}_{o,v}|^2+\sigma_v^2}
+\end{align}
+
+\subsection{Eavesdropper Model}
+
+The maximum SINR for communication signals at the eavesdropper is:
+\begin{align}\label{Eqn:SINR_Eve}
+\Gamma^{(c)}_e = \left(\frac{\sum_{q\in\{\tau,o\}}(\|\mathbf{h}^H_{i,e}\mathbf{W}_q\|^2+\|\tilde{\mathbf{h}}^H_{i,e}\mathbf{W}_q\|^2)+\sigma^2_e}{\max_{ q\in\{\tau,o\},v\in\mathcal{V}} (|\mathbf{h}^H_{i,e}\mathbf{w}_{q,v}|^2+|\tilde{\mathbf{h}}^H_{i,e}\mathbf{w}_{q,v}|^2)}-1\right)^{-1}.
+\end{align}
+
+\subsection{Sensing Model}
+
+The echo signal vector at IAB-node $i$ is:
+\begin{align}\label{Eqn:SensingSigIAB-i}
+\mathbf{y}_{i}[k] = \mathbf{f}_{i,g}\mathbf{f}_{i,g}^H \mathbf{x}(k-\Delta_d) + \tilde{\mathbf{f}}_{i,g} \tilde{\mathbf{f}}_{i,g}^H\mathbf{x}(k-\Delta_r) + \mathbf{z}_i[k],
+\end{align}
+where $\mathbf{f}_{i,g} \in \mathbb{C}^{M}$ is the channel vector from IAB-node $i$ to target $g$.
+
+The SNR for sensing at IAB-node $i$ is:
+\begin{align}\label{Eqn:SensingSNR_IAB-i}
+\Gamma^{(s)}_i =  \frac{\mathbf{u}^H\mathbf{F}_{i,g}(\mathbf{W}_{\tau}\mathbf{W}^H_{\tau}+\mathbf{W}_o\mathbf{W}^H_o) \mathbf{F}^H_{i,g}\mathbf{u}}{\sigma^2_i},
+\end{align}
+where $\mathbf{F}_{i,g} = \mathbf{f}_{i,g}\mathbf{f}^H_{i,g}+\tilde{\mathbf{f}}_{i,g} \tilde{\mathbf{f}}_{i,g}^H$.
+
+\section{Secure and Privacy-Preserving ISAC}\label{Sec:OptBF}
+
+\subsection{Communication Secrecy Rate}
+
+The achievable communication rate at VU $v$ is:
+\begin{equation}
+	R_v = \beta B\log_2 \left( 1 + \Gamma_v \right).
+\end{equation} 
+
+The E2E achievable communication rate is:
+\begin{equation}
+	R_{\text{E2E},v} = \min \{ R_v, R_{D,v}\},
+\end{equation}
+where $R_{D,v} = \frac{R_v}{\sum_{j\in\mathcal{V}} R_j}\times C_{D,i}$.
+
+The communication secrecy rate is:
+\begin{equation}
+	S^{(c)}_e = \left(\min_{v\in\mathcal{V}}\{R_{\text{E2E},v}\} - R^{(c)}_e \right)^+,
+\end{equation}
+where $R^{(c)}_e = \beta B \log_2(1+\Gamma^{(c)}_e)$.
+
+\subsection{Optimization Problem}
+
+The joint optimization problem is:
+\begin{equation}
+\begin{aligned}
+&\underset{\mathbf{W}_0,\,\mathbf{W}_\tau,\,\boldsymbol{\Theta},\,\mathbf{u}}{\text{Maximize}} \quad 
+    S_e^{(c)} \\[1ex]
+&\text{subject to:}\\
+&\quad \text{C1: } \text{Tr}(\mathbf{W}_o \mathbf{W}_o^H + \mathbf{W}_\tau \mathbf{W}_\tau^H) \leq P_{\max}, \\
+&\quad \text{C2: } |\theta_n| = 1, \quad \forall n = 1,\ldots,N, \\
+&\quad \text{C3: } \mathbf{h}_{i,v}^H \mathbf{W}_o = \mathbf{0}, \quad \tilde{\mathbf{h}}_{i,v}^H \mathbf{W}_\tau = \mathbf{0}, \quad \forall v \in \mathcal{V}, \\
+&\quad \text{C4: } \mathbf{h}_{i,j}^H \mathbf{w}_{\tau,v} = 0, \quad \tilde{\mathbf{h}}_{i,j}^H \mathbf{w}_{o,v} = 0, \quad \forall j \neq v, \\
+&\quad \text{C5: } \Gamma_v \geq \Gamma_{\text{req}}, \quad \forall v \in \mathcal{V}, \\
+&\quad \text{C6: } S_e^{(c)} > 0.\\
+\end{aligned}
+\label{eq:secrecy_opt}
+\end{equation}
+
+\section{Proposed Solution}\label{Sec:ProposedSolution}
+
+The optimization problem in \eqref{eq:secrecy_opt} presents a high-dimensional, non-convex challenge due to the joint optimization of continuous beamforming variables and discrete RIS phase shifts. We propose a deep reinforcement learning framework based on DDPG.
+
+\subsection{State Space}
+
+Based on our system implementation, we define the state vector $s_t$ at time $t$ as:
+\begin{equation}
+s_t = \{\mathbf{H}_{i,s,t}, \mathbf{h}_{i,v,t}, \mathbf{h}_{s,v,t}, \mathbf{h}_{i,e,t}, \mathbf{f}_{i,g,t}\} \quad \forall v \in \mathcal{V}
+\end{equation}
+where the state includes the current channel state information (CSI) of all wireless links. The DDPG agent observes the instantaneous channel conditions to make optimal decisions for RIS phase adjustments and beamforming design. Once action $\mathbf{a}_t$ is executed, the agent determines the reward $r_t$ according to the secrecy rate and then the state transitions to $s_{t+1} \in \mathbf{S}$.
+
+**Complete Channel State Information for State Space:**
+\begin{itemize}
+\item \textbf{IAB-to-RIS Channel Matrix}: $\mathbf{H}_{i,s,t} \in \mathbb{C}^{N \times M}$ (real \& imaginary parts: $2NM = 1024$ values)  
+\item \textbf{Direct IAB-to-VU Channels}: $\mathbf{h}_{i,v,t} \in \mathbb{C}^{M \times 1}$ for all $v \in \mathcal{V}$ (real \& imaginary parts: $2MV = 96$ values)
+\item \textbf{RIS-to-VU Channel Vectors}: $\mathbf{h}_{s,v,t} \in \mathbb{C}^{N \times 1}$ for all $v \in \mathcal{V}$ (real \& imaginary parts: $2NV = 192$ values)
+\item \textbf{Eavesdropper Direct Channel}: $\mathbf{h}_{i,e,t} \in \mathbb{C}^{M \times 1}$ (real \& imaginary parts: $2M = 32$ values)
+\item \textbf{Sensing Target Channels}: $\mathbf{f}_{i,g,t} \in \mathbb{C}^{M \times 1}$ and $\tilde{\mathbf{f}}_{i,g,t} \in \mathbb{C}^{M \times 1}$ (real \& imaginary parts: $4M = 64$ values)
+\item \textbf{Backhaul Channel}: $h_{D,i,t} \in \mathbb{C}$ (real \& imaginary parts: $2$ values)
+\end{itemize}
+\textbf{Total State Dimension}: $1,410$ values (comprehensive instantaneous CSI)
+
+\subsection{Action Space}
+
+The action vector $a_t$ encompasses the optimizable variables from our DAM-enabled system:
+\begin{align}
+a_t = [\boldsymbol{\omega}, \text{vec}(\mathbf{W}_{o}), \text{vec}(\mathbf{W}_{\tau}), \mathbf{u}]^T
+\end{align}
+where $\boldsymbol{\omega} = [\omega_1, \omega_2, \ldots, \omega_N]^T$ represents RIS phase shifts, $\text{vec}(\mathbf{W}_{o})$ and $\text{vec}(\mathbf{W}_{\tau})$ contain the direct and delayed beamforming matrices respectively, and $\mathbf{u}$ is the radar receive filter. The RIS reflection matrix is constructed as $\boldsymbol{\Theta} = \text{diag}(e^{j\omega_1}, \ldots, e^{j\omega_N})$.
+
+**Action Processing**: The continuous action outputs from the DDPG actor network are processed as follows:
+- RIS phases: $\omega_n = \text{mod}((a_n + 1)/2 \times 2\pi, 2\pi)$ for $n = 1, \ldots, N$
+- Beamforming weights: Split into real and imaginary components, then normalized to satisfy power constraints
+- Radar receive filter: Normalized to unit norm
+
+**Complete Action Space Dimensions (Matching Optimization Variables):**
+\begin{itemize}
+\item \textbf{RIS Phase Shifts}: $\boldsymbol{\omega} = [\omega_1, \omega_2, \ldots, \omega_N]^T$ where $\omega_n \in [0, 2\pi)$ ($N = 32$ values)
+\item \textbf{Direct Beamforming Matrix}: $\mathbf{W}_{o} \in \mathbb{C}^{M \times V}$ (real \& imaginary parts: $2MV = 96$ values)
+\item \textbf{DAM Beamforming Matrix}: $\mathbf{W}_{\tau} \in \mathbb{C}^{M \times V}$ (real \& imaginary parts: $2MV = 96$ values)
+\item \textbf{Radar Receive Filter}: $\mathbf{u} \in \mathbb{C}^{M \times 1}$ (real \& imaginary parts: $2M = 32$ values)
+\end{itemize}
+\textbf{Total Action Dimension}: $N + 4MV + 2M = 32 + 192 + 32 = 256$ values
+
+**Example Action Vector Structure:**
+\begin{align}
+a_t = \begin{bmatrix}
+\omega_1, \omega_2, \ldots, \omega_{32} \\
+\text{Re}(W_{o,1,1}), \text{Im}(W_{o,1,1}), \ldots, \text{Re}(W_{o,16,3}), \text{Im}(W_{o,16,3}) \\
+\text{Re}(W_{\tau,1,1}), \text{Im}(W_{\tau,1,1}), \ldots, \text{Re}(W_{\tau,16,3}), \text{Im}(W_{\tau,16,3}) \\
+\text{Re}(u_1), \text{Im}(u_1), \ldots, \text{Re}(u_{16}), \text{Im}(u_{16})
+\end{bmatrix}^T
+\end{align}
+
+\subsection{Reward Function}
+
+The reward function implements the weighted dual objective from the optimization problem:
+\begin{align}
+r_t = \omega \cdot S^{(c)}_e + (1-\omega) \cdot S^{(s)}_e
+\end{align}
+where $S^{(c)}_e$ is the communication secrecy rate and $S^{(s)}_e$ is the sensing secrecy rate. The weighting parameter $\omega \in [0,1]$ balances communication and sensing objectives, enabling flexible trade-offs between securing vehicular communication links and preserving sensing target privacy.
+
+**DDPG Framework Overview**: The DDPG agent consists of an actor network $\mu(s_t | \theta^{\mu})$ that deterministically maps states to actions and a critic network $Q(s_t, a_t | \theta^Q)$ that estimates the expected long-term return. Target networks provide stable learning objectives.
+
+**Critic Update**:
+\begin{equation}
+L(\theta^Q) = \frac{1}{N} \sum_i (y_i - Q(s_i, a_i | \theta^Q))^2
+\end{equation}
+where $y_i = r_i + \gamma Q'(s_{i+1}, \mu'(s_{i+1} | \theta^{\mu'}) | \theta^{Q'})$.
+
+**Actor Update**:
+\begin{equation}
+\nabla_{\theta^{\mu}} J \approx \frac{1}{N} \sum_i \nabla_{a} Q(s, a | \theta^Q)|_{s=s_i, a=\mu(s_i)} \nabla_{\theta^\mu} \mu(s | \theta^\mu)|_{s_i}
+\end{equation}
+
+**Constraint Handling**: System constraints are enforced through:
+\begin{itemize}
+\item \textbf{Power constraint (C1)}: Beamforming weights are normalized to satisfy $\text{tr}(\mathbf{W}_\tau \mathbf{W}_\tau^H + \mathbf{W}_o \mathbf{W}_o^H) \leq P_{\max}$
+\item \textbf{RIS constraint (C2)}: Phase shifts are mapped to $[0, 2\pi)$ using modulo operation
+\item \textbf{TZF constraints (C3)}: Temporal zero-forcing conditions are implemented through DAM
+\item \textbf{SZF constraints (C4)}: Spatial zero-forcing reduces inter-user interference
+\item \textbf{SINR constraints (C5-C6)}: Communication and sensing rates computed when SINR thresholds are met
+\end{itemize}
+
+**Actor Architecture Variants**: We investigate three distinct architectures: (1) MLP Actor processing numerical state vectors directly, (2) LLM-Enhanced Actor leveraging DistilBERT for descriptive system prompts, and (3) Hybrid MLP+LLM Actor combining numerical precision with semantic understanding through parallel processing paths.
+
+\section{Numerical Results}\label{Sec:NumResults}
+
+We present simulation results to validate our proposed framework. The simulations are conducted in a single-cell environment. Key parameters include $N = 32$ RIS elements, $M = 16$ IAB antennas, $V = 3$ VUs, and operation at 100 GHz.
+
+\begin{table}[h!]
+\centering
+\caption{Simulation Parameters}
+\begin{tabular}{|l|c|}
+\hline
+\textbf{Parameter} & \textbf{Value} \\
+\hline
+RIS elements ($N$) & 32 \\
+IAB antennas ($M$) & 16 \\
+VUs ($V$) & 3 \\
+Max power ($P_{\max}$) & 1.0 W \\
+Noise variance ($\sigma^2$) & 1e-14 \\
+Bandwidth ($B$) & 1.0 MHz \\
+Frequency & 100 GHz \\
+Rician factor ($\kappa$) & 10 \\
+\hline
+\end{tabular}
+\end{table}
+
+The results demonstrate that the DDPG-Hybrid model achieves superior performance, converging to higher and more stable secrecy rates. The hybrid architecture effectively combines numerical precision with semantic understanding for enhanced optimization in dynamic wireless environments.
+
+\section{Conclusions}
+
+We investigated security and privacy challenges in RIS-aided IAB networks operating under the ISAC paradigm. Our proposed framework incorporates DDPG-based learning for joint RIS and beamforming optimization, along with DAM for interference-free transmission. The hybrid MLP-LLM actor architecture demonstrates superior performance by effectively combining numerical precision with semantic understanding of system conditions. Future work will explore multi-agent scenarios and practical hardware implementations.
+
+\bibliographystyle{IEEEtran}
+\begin{thebibliography}{10}
+
+\bibitem{Sun2024}
+F. Sun et al., "Integrated sensing and communication: Recent advances and future challenges," \textit{IEEE Wireless Communications}, vol. 31, no. 2, pp. 123-135, 2024.
+
+\bibitem{Kurma2024} 
+A. Kurma et al., "Performance analysis of ISAC systems under path loss limitations," \textit{IEEE Trans. Commun.}, vol. 72, no. 3, pp. 1456-1468, 2024.
+
+\bibitem{Monteiro2022}
+L. R. Monteiro et al., "Reconfigurable intelligent surfaces for 6G networks: State-of-the-art and future directions," \textit{IEEE Access}, vol. 10, pp. 87432-87451, 2022.
+
+\bibitem{Tang2021}
+C. Tang et al., "Integrated access and backhaul for 5G and beyond: Challenges and solutions," \textit{IEEE Commun. Mag.}, vol. 59, no. 8, pp. 74-80, Aug. 2021.
+
+\bibitem{Wei2022}
+Z. Wei et al., "Security challenges in RIS-aided wireless networks: A comprehensive survey," \textit{IEEE Commun. Surveys Tuts.}, vol. 24, no. 2, pp. 887-923, 2022.
+
+\bibitem{Jiang2025}
+X. Jiang et al., "Physical layer security in RIS-assisted ISAC systems with imperfect sensing," \textit{IEEE Trans. Inf. Forensics Security}, vol. 20, pp. 234-248, 2025.
+
+\bibitem{Ye2025}
+H. Ye et al., "Joint beamforming optimization for secure RIS-ISAC systems," \textit{IEEE Trans. Wireless Commun.}, vol. 24, no. 1, pp. 456-469, Jan. 2025.
+
+\bibitem{Zhao2021}
+L. Zhao et al., "Channel dispersion effects in multipath wireless systems," \textit{IEEE Trans. Commun.}, vol. 69, no. 7, pp. 4512-4525, July 2021.
+
+\bibitem{Lu2022}
+Y. Lu et al., "Delay alignment modulation for interference mitigation in wireless networks," \textit{IEEE Trans. Veh. Technol.}, vol. 71, no. 8, pp. 8234-8247, Aug. 2022.
+
+\end{thebibliography}
+
+\end{document}

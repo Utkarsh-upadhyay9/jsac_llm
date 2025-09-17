@@ -1,0 +1,62 @@
+\section{Simulation Setup}
+
+We evaluate the performance of our proposed RIS-aided IAB network through comprehensive numerical simulations. The simulation environment considers a practical urban deployment scenario where an IAB node equipped with an RIS serves multiple vehicular users under the threat of an eavesdropper attempting to intercept confidential communications. The network topology includes a donor base station connected to the IAB node via a backhaul link, while the RIS-assisted IAB node provides secure downlink communication to vehicular users. All channels incorporate realistic propagation models including both line-of-sight (LoS) and non-line-of-sight (NLoS) components with appropriate path loss and Rician fading characteristics. The system operates in a mmWave frequency band to leverage the high spatial resolution capabilities of RIS technology, while the reinforcement learning agents (MLP, LLM, and Hybrid DDPG architectures) are trained over 1000 episodes to optimize the joint beamforming and RIS phase shift design for communication secrecy maximization.
+
+\begin{table}[!t]
+\centering
+\caption{System Parameters for RIS-IAB Network}
+\label{tab:system_params}
+\begin{tabular}{|l|c|l|}
+\hline
+\textbf{Parameter} & \textbf{Symbol} & \textbf{Value} \\
+\hline
+Number of RIS elements & $N$ & 32 \\
+Number of BS antennas & $M$ & 16 \\
+Number of vehicular users & $V$ & 3 \\
+Number of IAB nodes & $I$ & 1 \\
+Maximum transmit power & $P_{\max}$ & 1 W \\
+Carrier wavelength & $\lambda_c$ & 0.003 m (100 GHz) \\
+System bandwidth & $B$ & 1.0 MHz \\
+Noise power spectral density & $\sigma^2$ & $-140$ dBm/Hz \\
+Backhaul efficiency factor & $\beta$ & 0.8 \\
+Minimum SNR threshold & $\gamma_{\text{req}}$ & $-30$ dB \\
+Trade-off weight & $\omega$ & 0.5 \\
+Rician fading factor & $\kappa$ & 10 dB \\
+\hline
+\end{tabular}
+\end{table}
+
+\begin{table}[!t]
+\centering
+\caption{Channel Model and Position Parameters}
+\label{tab:channel_params}
+\begin{tabular}{|l|c|l|}
+\hline
+\textbf{Parameter} & \textbf{Symbol} & \textbf{Value} \\
+\hline
+Path loss exponent & $\alpha$ & 2.5 \\
+LoS attenuation factor & $\xi_{\text{LoS}}$ & 2.0 \\
+NLoS attenuation factor & $\xi_{\text{NLoS}}$ & 3.5 \\
+Height difference & $h_0$ & 10 m \\
+LoS probability constants & $c_1, c_2$ & 11.95, 0.136 \\
+\hline
+\multicolumn{3}{|c|}{\textbf{Node Positions (meters)}} \\
+\hline
+Vehicular user position & - & 20 \\
+IAB node position & - & 40 \\
+RIS position & - & 30 \\
+Donor BS position & - & 100 \\
+Eavesdropper position & - & 70 \\
+\hline
+\multicolumn{3}{|c|}{\textbf{RL Training Parameters}} \\
+\hline
+Training episodes & - & 1000 \\
+Batch size (MLP) & - & 32 \\
+Batch size (LLM/Hybrid) & - & 16 \\
+Learning rate (MLP) & - & $10^{-3}$ \\
+Learning rate (LLM/Hybrid) & - & $5 \times 10^{-5}$ \\
+Discount factor & $\gamma$ & 0.99 \\
+Target network update rate & $\tau$ & 0.0005 (LLM/Hybrid), 0.001 (MLP) \\
+\hline
+\end{tabular}
+\end{table}

@@ -1,0 +1,101 @@
+\section{Proposed Solution}\label{Sec:ProposedSolution}
+
+The optimization problem in \eqref{eq:secrecy_opt} presents a high-dimensional, non-convex challenge due to the joint optimization of continuous beamforming variables and discrete RIS phase shifts subject to multiple constraints. Traditional convex optimization techniques fail to handle the non-convex nature of the secrecy rate expressions, particularly the complex interdependencies between communication secrecy and power constraints. Moreover, the dynamic nature of wireless channels in vehicular environments necessitates real-time adaptation capabilities beyond conventional optimization approaches.
+
+To address these challenges, we propose a deep reinforcement learning framework based on the Deep Deterministic Policy Gradient (DDPG) algorithm, specifically designed to handle the continuous action space of our RIS-aided IAB network. The agent learns to map the system state $s_t$ to optimal actions $a_t$ (beamforming weights and RIS phases) through interaction with the wireless environment while respecting the zero-forcing conditions inherent in delay alignment modulation.
+
+\subsection{State Space Formulation}
+
+Based on our system implementation, we define the state vector $s_t$ at time $t$ as:
+\begin{equation}
+s_t = [\boldsymbol{\omega}_{t-1}, \text{Re}(\text{vec}(\mathbf{W}_{1,t-1})), \text{Im}(\text{vec}(\mathbf{W}_{1,t-1})), \text{Re}(\text{vec}(\mathbf{W}_{2,t-1})), \text{Im}(\text{vec}(\mathbf{W}_{2,t-1}))]^T
+\end{equation}
+where $\boldsymbol{\omega}_{t-1} = [\omega_1, \omega_2, \ldots, \omega_{N_r}]^T$ represents the previous RIS phase configuration, and $\text{Re}(\text{vec}(\mathbf{W}_{1}))$, $\text{Im}(\text{vec}(\mathbf{W}_{1}))$, $\text{Re}(\text{vec}(\mathbf{W}_{2}))$, $\text{Im}(\text{vec}(\mathbf{W}_{2}))$ are the real and imaginary parts of the vectorized beamforming matrices from the previous time step.
+
+\subsection{Action Space Design}
+
+The action vector $a_t$ encompasses the optimizable variables from our RIS-aided IAB system:
+\begin{align}
+a_t = [\Delta\boldsymbol{\omega}, \text{vec}(\Delta\mathbf{W}_{1}), \text{vec}(\Delta\mathbf{W}_{2})]^T
+\end{align}
+where $\Delta\boldsymbol{\omega}$ represents RIS phase adjustments and $\text{vec}(\Delta\mathbf{W}_{1})$, $\text{vec}(\Delta\mathbf{W}_{2})$ contain beamforming weight updates for the delayed and non-delayed transmission matrices respectively. The RIS reflection matrix is constructed as $\boldsymbol{\Theta} = \text{diag}(e^{j\omega_1}, \ldots, e^{j\omega_{N_r}})$.
+
+\subsection{DDPG Framework Overview}
+
+The DDPG agent consists of an actor network $\mu(s_t | \theta^{\mu})$ that deterministically maps states to actions and a critic network $Q(s_t, a_t | \theta^Q)$ that estimates the expected long-term return. Target networks $\mu'$ and $Q'$ provide stable learning objectives. The critic is updated by minimizing:
+\begin{equation}
+    L(\theta^Q) = \frac{1}{N} \sum_i (y_i - Q(s_i, a_i | \theta^Q))^2,
+\end{equation}
+where $y_i = r_i + \gamma Q'(s_{i+1}, \mu'(s_{i+1} | \theta^{\mu'}) | \theta^{Q'})$. The actor is updated using the sampled policy gradient:
+\begin{equation}
+    \nabla_{\theta^{\mu}} J \approx \frac{1}{N} \sum_i \nabla_{a} Q(s, a | \theta^Q)|_{s=s_i, a=\mu(s_i)} \nabla_{\theta^\mu} \mu(s | \theta^\mu)|_{s_i}.
+\end{equation}
+
+\subsection{Reward Function Engineering}
+
+The reward function implements the communication secrecy rate from \eqref{eq:secrecy_opt}:
+\begin{align}
+r_t = S^{(c)} = \left[ R_{\text{E2E},v} - R_e \right]^+
+\end{align}
+where $S^{(c)}$ is the communication secrecy rate for vehicular users, ensuring secure transmission in the presence of eavesdroppers while maintaining reliable end-to-end connectivity through the IAB architecture.
+
+\subsection{Constraint Handling}
+
+System constraints from \eqref{eq:secrecy_opt} are enforced through:
+\begin{itemize}
+\item \textbf{Power constraint (C1)}: Beamforming weights are normalized to satisfy $\|\mathbf{W}_1\|_F^2 + \|\mathbf{W}_2\|_F^2 \leq P_{\max}$
+\item \textbf{RIS constraint (C2)}: Phase shifts are mapped to $[0, 2\pi)$ using modulo operation to maintain unit-modulus reflection
+\item \textbf{ZF constraints}: Zero-forcing conditions from \eqref{Eqn:ZFcond} are implemented to ensure ISI-free transmission
+\item \textbf{Backhaul constraint (C3)}: Backhaul SINR requirements $\Gamma_{\text{BH},i} \geq \Gamma_{\text{BH}}^{\min}$ are maintained
+\item \textbf{SINR constraints}: Communication rates are computed only when SINR thresholds are met
+\end{itemize}
+
+\subsection{Actor Architecture Variants}
+
+We investigate three distinct actor architectures to handle the complex state-action mapping in our RIS-aided IAB system:
+
+\subsubsection{MLP Actor (Baseline)}
+The standard MLP actor processes the numerical state vector containing RIS phases and beamforming parameters directly through fully connected layers. This baseline approach learns control policies from scratch using scalar reward feedback from the communication secrecy rate.
+
+\subsubsection{LLM-Enhanced Actor}
+This architecture leverages a pre-trained DistilBERT model to process descriptive text prompts about system status, performance metrics, and optimization objectives. The prompts describe current secrecy rates, backhaul performance, power levels, and constraints, enabling the actor to utilize pre-trained language representations for improved decision making in the IAB context.
+
+\subsubsection{Hybrid MLP+LLM Actor}
+The hybrid approach combines numerical precision (MLP branch processing raw state vectors) with semantic understanding (LLM branch processing descriptive prompts) through parallel processing paths. Feature embeddings from both branches are concatenated before action generation, enabling simultaneous exploitation of low-level beamforming parameters and high-level system understanding of the RIS-IAB architecture.
+
+\subsection{Integration in Learning}
+
+The DDPG framework explicitly incorporates delay alignment modulation principles through:
+\begin{itemize}
+\item \textbf{ZF Learning}: The agent learns to satisfy zero-forcing conditions from \eqref{Eqn:ZFcond} by receiving reward penalties when ISI occurs
+\item \textbf{Constructive Alignment}: Actions are designed to maximize the constructively aligned signal power from \eqref{Eqn:ISI-FreeRecSigUV}
+\item \textbf{Delay Optimization}: The beamforming matrices $\mathbf{W}_1$ and $\mathbf{W}_2$ are jointly optimized to exploit delay diversity while maintaining secrecy
+\item \textbf{Backhaul Coordination}: The learning framework considers the interplay between access link secrecy and backhaul quality requirements
+\end{itemize}
+
+This creates a comprehensive learning framework that respects the physical constraints of the RIS-aided IAB system while maximizing communication secrecy through intelligent RIS phase control, beamforming optimization, and joint constraint satisfaction in vehicular environments.
+
+\subsection{DAM Integration in Learning}
+
+The DDPG framework explicitly incorporates delay alignment modulation principles through:
+\begin{itemize}
+\item \textbf{ZF Learning}: The agent learns to satisfy zero-forcing conditions from \eqref{Eqn:ZFcond} by receiving reward penalties when ISI occurs
+\item \textbf{Constructive Alignment}: Actions are designed to maximize the constructively aligned signal power from \eqref{Eqn:ISI-FreeRecSigUV}
+\item \textbf{Delay Optimization}: The beamforming matrices $\mathbf{W}_1$ and $\mathbf{W}_2$ are jointly optimized to exploit delay diversity while maintaining secrecy
+\item \textbf{Backhaul Coordination}: The learning framework considers the interplay between access link secrecy and backhaul quality requirements
+\end{itemize}
+
+\subsection{Training Algorithm}
+
+The complete training procedure alternates between environment interaction and policy updates:
+
+\begin{enumerate}
+\item \textbf{State Observation}: Current RIS phases, beamforming weights, and channel conditions
+\item \textbf{Action Selection}: Actor network generates RIS phase and beamforming updates with exploration noise
+\item \textbf{Environment Step}: Apply actions, compute communication secrecy rate, and evaluate constraints
+\item \textbf{Experience Storage}: Store transition $(s_t, a_t, r_t, s_{t+1})$ in replay buffer
+\item \textbf{Policy Update}: Update actor and critic networks using mini-batch sampling from experience replay
+\item \textbf{Target Update}: Soft update of target networks for stability
+\end{enumerate}
+
+This creates a comprehensive learning framework that respects the physical constraints of the RIS-aided IAB system while maximizing communication secrecy through intelligent RIS phase control, beamforming optimization, and joint constraint satisfaction in vehicular environments.

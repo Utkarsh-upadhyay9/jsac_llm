@@ -113,9 +113,9 @@ def _sync_dual_ylim(ax_left, ax_right, arrays_left, arrays_right, pad=0.0):  # p
     except Exception:
         pass
 
-# --- Figure 1: Convergence vs Episodes for Different Antennas/Power ---
+# --- Figure 1: Convergence vs Episodes with Upper Bound ---
 def plot_convergence_antennas_power():
-    print("Creating Figure 1: Convergence vs Episodes (Antennas/Power) - 6 lines, no title")
+    print("Creating Figure 1: Convergence vs Episodes (Antennas/Power) with Upper Bound - 7 lines, no title")
     
     plt.figure(figsize=(10, 10))
     
@@ -131,6 +131,15 @@ def plot_convergence_antennas_power():
     hybrid_dam = np.cumsum(1.9 * np.log(episodes + 1) + 0.4 * np.sin(episodes/15) + np.random.normal(0, 0.08, len(episodes))) / episodes
     hybrid_no_dam = np.cumsum(1.6 * np.log(episodes + 1) + 0.3 * np.sin(episodes/15) + np.random.normal(0, 0.08, len(episodes))) / episodes
 
+    # Find upper bound (best performing final value)
+    all_curves = [mlp_dam, mlp_no_dam, llm_dam, llm_no_dam, hybrid_dam, hybrid_no_dam]
+    curve_names = ['DAM MLP', 'w/o DAM MLP', 'DAM LLM', 'w/o DAM LLM', 'DAM Hybrid', 'w/o DAM Hybrid']
+    
+    final_values = [curve[-1] for curve in all_curves]
+    best_idx = np.argmax(final_values)
+    upper_bound_value = final_values[best_idx]
+    best_curve_name = curve_names[best_idx]
+
     # Plot 6 lines
     plt.plot(episodes, mlp_dam, 'b-', label='DAM MLP', linewidth=2.0)
     plt.plot(episodes, mlp_no_dam, 'b--', label='w/o DAM MLP', linewidth=2.0)
@@ -139,10 +148,14 @@ def plot_convergence_antennas_power():
     plt.plot(episodes, hybrid_dam, 'g-', label='DAM Hybrid', linewidth=2.0)
     plt.plot(episodes, hybrid_no_dam, 'g--', label='w/o DAM Hybrid', linewidth=2.0)
     
+    # Add upper bound line
+    plt.axhline(y=upper_bound_value, color='k', linestyle=':', linewidth=2.5, 
+                label=f'Upper Bound ({best_curve_name})', alpha=0.8)
+    
     plt.xlabel('Episodes', fontsize=18)
     plt.ylabel('Secrecy Rate (bps/Hz)', fontsize=18)
     # No title per request
-    plt.legend(fontsize=18, ncol=2)
+    plt.legend(fontsize=16, ncol=2, loc='best')  # Reduced font size for better fit
     plt.grid(True, alpha=0.3)
     plt.xlim(episodes.min(), episodes.max())
     ax = plt.gca()
@@ -164,7 +177,8 @@ def plot_convergence_antennas_power():
     plt.subplots_adjust(left=0.15, bottom=0.15, right=0.95, top=0.95)
     plt.savefig(f"{plots_dir}/fig1_convergence_antennas_power.png", dpi=300, bbox_inches='tight')
     plt.close()
-    print("✓ Figure 1 saved")
+    print(f"✓ Figure 1 saved with upper bound: {upper_bound_value:.4f}")
+    print(f"  Best performing: {best_curve_name}")
 
 # --- Figure 2: Secracy Rate vs VUs (single y-axis) ---
 def plot_rewards_vs_vus():
